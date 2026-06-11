@@ -65,7 +65,7 @@ def get_youtube_videos():
             for item in items:
                 snippet = item['snippet']
                 video_id = item.get('id', {}).get('videoId')
-                
+              
                 if not video_id:
                     continue
 
@@ -101,7 +101,6 @@ def get_youtube_videos():
 def get_site_settings():
     """Get global site settings"""
     return SiteSettings.query.first() or SiteSettings()
-
 
 @public_bp.context_processor
 def inject_site_settings():

@@ -296,22 +296,18 @@
                     <!-- Thumbnail -->
                     <div class="relative overflow-hidden">
                         <img
-                            src="{{ video.thumbnail }}"
+                            src="{{ video.thumb }}"
                             alt="{{ video.title }}"
                             class="w-full h-56 object-cover group-hover:scale-105 transition duration-500"
                         >
 
                         <!-- Play Button Overlay -->
-                        <button
-                            class="video-btn absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/50 transition"
-                            data-video="{{ video.video_id }}"
-                        >
+                        <button class="video-btn absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/50 transition" data-video="{{ video.id }}">
                             <div class="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-                                <svg xmlns="http://www.w3.org/2000/svg"
-                                     class="w-8 h-8 text-red-600 ml-1"
-                                     fill="currentColor"
-                                     viewBox="0 0 24 24">
-                                    <path d="M8 5v14l11-7z"/>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                <rect x="2" y="5" width="20" height="14" rx="4" fill="#FF0000"/>
+                                <path d="M10 8V16L16 12L10 8Z" fill="white"/>
                                 </svg>
                             </div>
                         </button>
@@ -330,12 +326,9 @@
                         <div class="flex items-center justify-between text-sm text-gray-500">
                             <span>{{ video.published }}</span>
 
-                            <button
-                                class="video-btn text-[#141495] font-semibold hover:text-[#0800f0] transition"
-                                data-video="{{ video.video_id }}"
-                            >
-                                Watch Now →
-                            </button>
+                            <!-- <button class="cta-primary text-[#141495] font-semibold hover:text-[#0800f0] transition" data-video="{{ video.id }}">
+                                Watch Now
+                            </button> -->
                         </div>
                     </div>
                 </div>
@@ -348,8 +341,8 @@
         <div class="text-center mt-14">
             <a href="https://www.youtube.com/channel/UCM2WH7pQgOoexI5S52k9pAQ"
                target="_blank"
-               class="btn-primary">
-                Visit Our YouTube Channel
+               class="cta-btn cta-primary text-center text-[#141495]">
+                Visit Our YouTube Channel <i class="fab fa-youtube"></i>
             </a>
         </div>
     </div>
