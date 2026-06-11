@@ -1,0 +1,28 @@
+{% extends "admin/base.html" %}
+{% block page_title %}Newsletter Subscribers{% endblock %}
+{% block content %}
+<div class="flex justify-end items-center mb-8">
+    <a href="{{ url_for('admin.newsletter_list') }}" class="bg-[#141495] text-white px-6 py-3 rounded">📬 Send Newsletter</a>
+</div>
+{% if subscribers.items %}
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="w-full">
+        <thead class="bg-gray-100">
+            <tr><th class="px-6 py-3 text-left font-semibold">Email</th><th class="px-6 py-3 text-left font-semibold">Name</th><th class="px-6 py-3 text-left font-semibold">Date</th><th class="px-6 py-3 text-right font-semibold">Actions</th></tr>
+        </thead>
+        <tbody class="divide-y">
+            {% for sub in subscribers.items %}
+            <tr>
+                <td class="px-6 py-4">{{ sub.email }}</td>
+                <td class="px-6 py-4">{{ sub.name or '-' }}</td>
+                <td class="px-6 py-4 text-sm">{{ sub.created_at.strftime('%b %d, %Y') }}</td>
+                <td class="px-6 py-4 text-right">
+                    <button onclick="deleteViaAjax('{{ url_for('admin.subscriber_delete', subscriber_id=sub.id) }}')" class="text-red-600"><i class="fa fa-trash"></i></button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}<p class="text-gray-500">No subscribers yet</p>{% endif %}
+{% endblock %}

@@ -1,0 +1,487 @@
+{% extends "base.html" %}
+
+{% block title %}John & Eniola - Financial Consultancy{% endblock %}
+{% block description %}Leading financial consultancy firm offering comprehensive solutions for tax planning, fiscal incentives, and business advisory services.{% endblock %}
+
+{% block extra_css %}
+<style>
+    
+    .hero {
+        min-height: 100vh;
+        position: relative;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .carousel-container {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+    }
+
+    .carousel-slide {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 1.4s ease-in-out;
+        z-index: 1;
+    }
+
+    .carousel-slide.active {
+        opacity: 1;
+        z-index: 2;
+    }
+
+    .carousel-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .carousel-slide::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 1;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        animation: float 3s ease-in-out infinite;
+    }
+
+    .glass-card:nth-child(2) { animation-delay: 0.5s; }
+    .glass-card:nth-child(3) { animation-delay: 1s; }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-12px); }
+    }
+
+    .text-shadow {
+        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+    }
+
+
+    .service-card {
+        background: white;
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(20, 20, 149, 0.1);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(20, 20, 149, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .service-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark));
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .service-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .service-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 60px rgba(20, 20, 149, 0.15);
+    }
+
+    .service-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        font-size: 24px;
+        color: white;
+    }
+
+    .service-card h3 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--color-primary);
+        margin-bottom: 1rem;
+    }
+
+    .service-card p {
+        color: #64748b;
+        line-height: 1.6;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- HERO SECTION -->
+<section class="hero ">
+    <!-- Carousel -->
+    <div class="carousel-container" id="heroCarousel">
+        <div class="carousel-slide active">
+            <img src="https://johneniolaltd.com/wp-content/uploads/2026/01/reception-1-1920x1080.jpg" alt="Financial Excellence">
+        </div>
+        <div class="carousel-slide">
+            <img src="https://johneniolaltd.com/wp-content/uploads/2026/01/je_conference_room-1920x1080.jpg" alt="Tax Strategy">
+        </div>
+        <div class="carousel-slide">
+            <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1920&q=80" alt="Business Advisory">
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="container mx-auto px-6 relative z-10 pt-3 max-w-7xl mx-auto">
+        <div class="max-w-6xl mx-auto">
+            <!-- Glass Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="glass-card rounded-2xl p-6 text-white">
+                    <h3 class="text-sm font-semibold mb-1">Fiscal Incentive</h3>
+                    <p class="text-xs opacity-90">Maximize your tax benefits</p>
+                </div>
+                <div class="glass-card rounded-2xl p-6 text-white">
+                    <h3 class="text-sm font-semibold mb-1">Risk Management</h3>
+                    <p class="text-xs opacity-90">Protect your investments</p>
+                </div>
+                <div class="glass-card rounded-2xl p-6 text-white">
+                    <h3 class="text-sm font-semibold mb-1">Advisory Services</h3>
+                    <p class="text-xs opacity-90">Strategic business guidance</p>
+                </div>
+            </div>
+
+            <!-- Main Text -->
+            <div class="">
+                <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-white text-shadow mb-6">
+                    Financial Excellence Redefined
+                </h1>
+                <p class="text-sm md:text-xl text-white/90 mb-10 leading-relaxed text-shadow">
+                    Empowering businesses with strategic financial solutions, comprehensive tax planning, 
+                    and expert advisory services that drive sustainable growth.
+                </p>
+
+                <!-- CTA Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="{{ url_for('public.contact') }}" 
+                        class="cta-btn cta-primary text-center text-[#141495]">
+                        Schedule Consultation
+                    </a>
+                    <a href="{{ url_for('public.services') }}" 
+                        class="cta-btn cta-secondary text-center">
+                        Our Services
+                    </a>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/70 flex flex-col items-center gap-2">
+        <span class="text-sm tracking-widest">SCROLL TO EXPLORE</span>
+        <i class="fas fa-chevron-down animate-bounce text-2xl"></i>
+    </div>
+</section>
+
+<!-- Our Expertise -->
+<section class="py-20 section-bg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="mb-4 text-white text-3xl sm:text-4xl md:text-5xl font-bold leading-snug">Our Expertise</h2>
+            <p class=" text-gray-400 max-w-2xl mx-auto">Comprehensive financial solutions designed to drive your business success and maximize your competitive advantage</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for service in services %}
+            <div class="service-card group">
+                <div class="w-12 h-12 bg-[#141495] rounded-lg flex items-center justify-center text-white text-2xl mb-6">
+                    {{ service.icon or '📊' }}
+                </div>
+                <h3 class="mb-3 ">{{ service.title }}</h3>
+                <p class="text-gray-600 text-sm leading-relaxed mb-4">{{ service.excerpt or service.description[:150] }}</p>
+                <a href="{{ url_for('public.services') }}" class="inline-flex items-center text-[#141495] font-semibold hover:text-[#0800f0] transition">
+                    Learn More →
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-20 bg-white text-[#141495]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div class="text-center">
+                <div class="text-4xl md:text-5xl font-bold mb-2">500+</div>
+                <p class="text-gray-500">Clients Served</p>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl md:text-5xl font-bold mb-2">15+</div>
+                <p class="text-gray-500">Years Experience</p>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl md:text-5xl font-bold mb-2">N2B+</div>
+                <p class="text-gray-500">Assets Managed</p>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl md:text-5xl font-bold mb-2">98%</div>
+                <p class="text-gray-500">Client Satisfaction</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Trusted Companies -->
+<section class="py-20 bg-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="mb-10 text-[#141495] text-3xl sm:text-4xl md:text-5xl font-bold leading-snug text-center">Trusted by Leading Organizations</h2>
+        <div class="flex flex-wrap justify-center items-center gap-12">
+            <div class="h-16 px-8 flex items-center opacity-100 hover:opacity-60 transition">
+                <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg"><i class="fa-solid fa-lock"></i></span>
+            </div>
+            <div class="h-16 px-8 flex items-center opacity-100 hover:opacity-60 transition">
+                <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg"><i class="fa-solid fa-lock"></i></span>
+            </div>
+            <div class="h-16 px-8 flex items-center opacity-100 hover:opacity-60 transition">
+                <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg"><i class="fa-solid fa-lock"></i></span>
+            </div>
+            <div class="h-16 px-8 flex items-center opacity-100 hover:opacity-60 transition">
+                <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg"><i class="fa-solid fa-lock"></i></span>
+            </div>
+           
+        </div>
+    </div>
+</section>
+
+<!-- Latest Financial Insights / YouTube Videos -->
+<section class="py-20 section-bg" id="youtube">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <!-- Section Header -->
+        <div class="text-center mb-16">
+            <h2 class="mb-4 text-white text-3xl sm:text-4xl md:text-5xl font-bold leading-snug">
+                Latest Financial Insights
+            </h2>
+
+            <p class="text-gray-300 max-w-2xl mx-auto text-lg">
+                Watch our expert videos on tax, risk management,
+                business growth, and strategic financial planning.
+            </p>
+        </div>
+
+        <!-- Video Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+            {% if videos %}
+
+                {% for video in videos %}
+                <div class="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition duration-300">
+
+                    <!-- Thumbnail -->
+                    <div class="relative overflow-hidden">
+                        <img
+                            src="{{ video.thumbnail }}"
+                            alt="{{ video.title }}"
+                            class="w-full h-56 object-cover group-hover:scale-105 transition duration-500"
+                        >
+
+                        <!-- Play Button Overlay -->
+                        <button
+                            class="video-btn absolute inset-0 flex items-center justify-center bg-black/40 hover:bg-black/50 transition"
+                            data-video="{{ video.video_id }}"
+                        >
+                            <div class="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     class="w-8 h-8 text-red-600 ml-1"
+                                     fill="currentColor"
+                                     viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-[#141495] mb-3 line-clamp-2 group-hover:text-[#0800f0] transition">
+                            {{ video.title }}
+                        </h3>
+
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-3">
+                            {{ video.description[:120] }}...
+                        </p>
+
+                        <div class="flex items-center justify-between text-sm text-gray-500">
+                            <span>{{ video.published }}</span>
+
+                            <button
+                                class="video-btn text-[#141495] font-semibold hover:text-[#0800f0] transition"
+                                data-video="{{ video.video_id }}"
+                            >
+                                Watch Now →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+            {% endif %}
+        </div>
+
+        <!-- CTA -->
+        <div class="text-center mt-14">
+            <a href="https://www.youtube.com/channel/UCM2WH7pQgOoexI5S52k9pAQ"
+               target="_blank"
+               class="btn-primary">
+                Visit Our YouTube Channel
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- VIDEO MODAL -->
+<div
+    id="videoModal"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm px-4"
+>
+    <div class="relative w-full max-w-5xl">
+
+        <!-- Close Button -->
+        <button
+            id="closeModal"
+            class="absolute -top-12 right-0 text-white text-4xl hover:text-red-500 transition"
+        >
+            &times;
+        </button>
+
+        <!-- Video Container -->
+        <div class="relative pb-[56.25%] h-0 overflow-hidden rounded-2xl shadow-2xl bg-black">
+            <iframe
+                id="youtubeIframe"
+                class="absolute top-0 left-0 w-full h-full"
+                src=""
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+            ></iframe>
+        </div>
+    </div>
+</div>
+
+<!-- VIDEO SCRIPT -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const modal = document.getElementById("videoModal");
+    const iframe = document.getElementById("youtubeIframe");
+    const closeBtn = document.getElementById("closeModal");
+
+    // Open Modal
+    document.querySelectorAll(".video-btn").forEach(button => {
+
+        button.addEventListener("click", () => {
+
+            const videoId = button.dataset.video;
+
+            iframe.src =
+                `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+
+            document.body.classList.add("overflow-hidden");
+        });
+    });
+
+    // Close Modal
+    function closeModal() {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+
+        iframe.src = "";
+
+        document.body.classList.remove("overflow-hidden");
+    }
+
+    closeBtn.addEventListener("click", closeModal);
+
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            closeModal();
+        }
+    });
+});
+</script>
+
+<!-- Testimonials -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="mb-4 text-[#141495] text-3xl sm:text-4xl md:text-5xl font-bold leading-snug text-center">What Our Clients Say</h2>
+        <p class="text-center text-gray-600 mb-16 max-w-2xl mx-auto">Trust experiences from businesses we've transformed</p>
+        
+        {% if testimonials %}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {% for testimonial in testimonials %}
+            <div class="card">
+                <div class="flex gap-1 mb-4">
+                    {% for i in range(testimonial.rating) %}
+                    <span class="text-[#0800f0]">★</span>
+                    {% endfor %}
+                </div>
+                <p class="text-gray-700 mb-6 italic">{{ testimonial.content }}</p>
+                <div class="flex items-center gap-4 border-t pt-4">
+                    {% if testimonial.client_image %}
+                    <img src="{{ testimonial.client_image }}" alt="{{ testimonial.client_name }}" class="w-12 h-12 rounded-full object-cover">
+                    {% else %}
+                    <div class="w-12 h-12 rounded-full bg-[#141495] text-white flex items-center justify-center font-bold">{{ testimonial.client_name[0] }}</div>
+                    {% endif %}
+                    <div>
+                        <p class="font-bold text-sm">{{ testimonial.client_name }}</p>
+                        {% if testimonial.client_role %}
+                        <p class="text-xs text-gray-600">{{ testimonial.client_role }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-center text-gray-500">No testimonials available yet.</p>
+        {% endif %}
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-20 cta-section text-white">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="mb-4 text-3xl sm:text-4xl md:text-5xl font-bold leading-snug text-center">Ready to Transform Your Financial Strategy?</h2>
+        <p class="text-xl text-gray-200 mb-10 max-w-2xl mx-auto">Discover how our expert financial services can help you achieve your business goals.</p>
+        <div class="flex flex-col sm:flex-row justify-center gap-6">
+            <button class="btn-primary" onclick="document.location='{{ url_for('public.contact') }}'">Schedule Consultation</button>
+            <a href="{{ url_for('public.insights') }}" class="btn-secondary">Explore Our Insights</a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

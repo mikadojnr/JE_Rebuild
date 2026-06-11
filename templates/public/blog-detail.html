@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - John & Eniola Consultancy{% endblock %}
+
+
+<style>
+    .prose img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 1.5rem auto;
+        display: block;
+    }
+
+    .prose table {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .prose iframe {
+        max-width: 100%;
+    }
+</style>
+
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <!-- <div class="absolute inset-0 bg-black/40"></div> -->
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="breadcrumb mb-6"><a href="{{ url_for('public.home') }}">Home</a>  / <a href="{{ url_for('public.insights') }}">Insights</a> / {{ post.title[:30] }}</div>
+        <h1 class="text-5xl md:text-6xl font-bold mb-6">{{ post.title }}</h1>
+        <div class="flex items-center gap-4 text-gray-200">
+            <span>{{ post.published_at.strftime('%B %d, %Y') if post.published_at else 'Unpublished' }}</span>
+            <span>By {{ post.author_name }}</span>
+        </div>
+    </div>
+</section>
+
+<!-- Article Content -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <!-- Main Content -->
+            <div class="lg:col-span-2">
+                {% if post.featured_image %}
+                <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="w-full rounded-md mb-8 h-96 object-cover">
+                {% endif %}
+                
+                <div class="prose max-w-none mb-5 border-t pt-5">
+                    {{ post.content | safe }}
+                </div>
+                
+                <!-- Tags -->
+                {% if post.tags %}
+                <div class="mb-12 pb-12 border-b">
+                    <h4 class="font-semibold mb-4">Tags</h4>
+                    <div class="flex flex-wrap gap-3">
+                        {% for tag in post.tags %}
+                        <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-pill text-sm">#{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Social Share -->
+                <div class="mb-12 pb-12 border-b">
+                    <h4 class="font-semibold mb-4">Share This Article</h4>
+                    <div class="flex gap-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center hover:opacity-80">𝕏</a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:opacity-80">f</a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center hover:opacity-80">in</a>
+                    </div>
+                </div>
+                
+                <!-- Comments Section -->
+                <div>
+                    <h3 class="heading-3 mb-8">Comments ({{ comments | length }})</h3>
+                    
+                    <!-- Comment Form -->
+                    <div class="mb-12 p-8 bg-gray-50 rounded-lg">
+                        <h4 class="font-semibold mb-6">Leave a Reply</h4>
+                        <form id="comment-form" class="space-y-4">
+                            {{ form.hidden_tag() }}
+                            
+                            <div>
+                                {{ form.author_name(class="form-control", placeholder="Your name") }}
+                                {% if form.author_name.errors %}
+                                <p class="text-red-500 text-sm mt-1">{{ form.author_name.errors[0] }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                {{ form.author_email(class="form-control", placeholder="Your email", type="email") }}
+                                {% if form.author_email.errors %}
+                                <p class="text-red-500 text-sm mt-1">{{ form.author_email.errors[0] }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                {{ form.content(class="form-control", rows="6", placeholder="Your comment...") }}
+                                {% if form.content.errors %}
+                                <p class="text-red-500 text-sm mt-1">{{ form.content.errors[0] }}</p>
+                                {% endif %}
+                            </div>
+                            
+                            <button type="submit" class="btn-primary hover:text-[#141495] hover:border-[#141495]">Post Comment</button>
+                        </form>
+                    </div>
+                    
+                    <!-- Comments List -->
+                    {% if comments %}
+                    <div class="space-y-8">
+                        {% for comment in comments %}
+                        <div class="p-6 border rounded-lg">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h5 class="font-semibold">{{ comment.author_name }}</h5>
+                                    <p class="text-sm text-gray-500">{{ comment.created_at.strftime('%B %d, %Y') }}</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-700">{{ comment.content }}</p>
+                            
+                            <!-- Nested Replies -->
+                            {% if comment.replies %}
+                            <div class="mt-6 space-y-4 ml-6 border-l-2 pl-6">
+                                {% for reply in comment.replies %}
+                                <div class="p-4 bg-gray-50 rounded">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <h6 class="font-semibold text-sm">{{ reply.author_name }}</h6>
+                                            <p class="text-xs text-gray-500">{{ reply.created_at.strftime('%B %d, %Y') }}</p>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-700">{{ reply.content }}</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 mb-8">No comments yet. Be the first to comment!</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="lg:col-span-1 flex">
+                <!-- Newsletter -->
+                <div class="card bg-[#141495] text-white h-full w-full sticky top-8">
+                    <h5 class="mb-3 text-md sm:text-sm md:text-lg font-semibold leading-snug text-[#141495]">
+                        Subscribe to Newsletter
+                    </h5>
+
+                    <form id="newsletter-form" class="space-y-3">
+                        {{ newsletter_form.hidden_tag() }}
+
+                        {{ newsletter_form.email(
+                            class="form-control bg-white text-[#141495] border-none",
+                            placeholder="Your email"
+                        ) }}
+
+                        <button type="submit" class="w-full btn-primary hover:text-[#141495]">
+                            Subscribe
+                        </button>
+                    </form>
+
+                    <hr class="mt-10 mb-10">
+
+                    <h5 class="mb-3 text-md sm:text-sm md:text-lg font-semibold leading-snug text-[#141495]">Recent Posts</h5>
+                    <div class="space-y-4">
+                        {% for related in related_posts %}
+                        <a href="{{ url_for('public.blog_detail', slug=related.slug) }}" class="flex items-center block group border p-3 mt-3">
+                            {% if related.featured_image %}
+                                <img
+                                    src="{{ related.featured_image }}"
+                                    alt="{{ related.title }}"
+                                    class="w-24 h-24 rounded-lg object-cover flex-shrink-0"
+                                />
+                            {% endif %}
+                            <div class="pl-3">
+                                <h5 class="font-semibold text-sm text-[#141495] group-hover:text-[#0800f0] transition line-clamp-2">{{ related.title }}</h5>
+                                <p class="text-xs text-gray-500 mt-2">{{ related.published_at.strftime('%b %d, %Y') if related.published_at else 'Unpublished' }}</p>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.getElementById('comment-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Posting...';
+    submitBtn.disabled = true;
+    
+    fetch('{{ url_for('public.blog_detail', slug=post.slug) }}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        if (data.success) {
+            document.getElementById('comment-form').reset();
+            setTimeout(() => location.reload(), 1000);
+        }
+    })
+    .catch(error => {
+        alert('Error posting comment');
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    });
+});
+
+
+</script>
+{% endblock %}

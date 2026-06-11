@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard{% endblock %} - John & Eniola</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+   
+
+    
+    {% block extra_head %}{% endblock %}
+
+    {% block extra_css %}{% endblock %}
+    
+</head>
+<body class="bg-gray-100">
+
+    <!-- Mobile Overlay -->
+    <div id="sidebar-overlay"
+         class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"
+         onclick="toggleSidebar()">
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar"
+           class="fixed top-0 left-0 z-50 h-screen w-64 section-bg text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out overflow-y-auto">
+
+        <!-- Logo -->
+        <div class="p-6 border-b border-white/10 flex items-center justify-between">
+
+            <div>
+                <h2 class="text-2xl font-bold">Admin</h2>
+                <p class="text-sm text-gray-300">John & Eniola</p>
+            </div>
+
+            <!-- Close Button Mobile -->
+            <button onclick="toggleSidebar()"
+                    class="lg:hidden text-white text-2xl">
+                &times;
+            </button>
+
+        </div>
+
+        <!-- Navigation -->
+        <nav class="py-6">
+
+            <a href="{{ url_for('admin.dashboard') }}"
+               class="admin-nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                <i class="text-xl fa-solid fa-chart-column"></i> Dashboard
+            </a>
+
+            <a href="{{ url_for('admin.blog_list') }}"
+               class="admin-nav-link {% if 'blog' in request.endpoint %}active{% endif %}">
+                <i class="text-xl fa-solid fa-file-pen"></i> Blog Posts
+            </a>
+
+            <a href="{{ url_for('admin.services_list') }}"
+               class="admin-nav-link {% if 'services' in request.endpoint %}active{% endif %}">
+                <i class="text-xl fa-solid fa-briefcase"></i> Services
+            </a>
+
+            <a href="{{ url_for('admin.team_list') }}"
+               class="admin-nav-link {% if 'team' in request.endpoint %}active{% endif %}">
+                <i class="text-xl fa-solid fa-users"></i> Team Members
+            </a>
+
+            <a href="{{ url_for('admin.testimonials_list') }}"
+               class="admin-nav-link {% if 'testimonials' in request.endpoint %}active{% endif %}">
+                <i class="text-xl fa-solid fa-star"></i> Testimonials
+            </a>
+
+            <a href="{{ url_for('admin.comments_list') }}"
+               class="admin-nav-link {% if 'comments' in request.endpoint %}active{% endif %}">
+                <i class="text-xl fa-solid fa-comment"></i> Comments
+            </a>
+
+            <a href="{{ url_for('admin.subscribers_list') }}"
+               class="admin-nav-link {% if 'subscribers' in request.endpoint %}active{% endif %}">
+                <i class="text-xl fa-solid fa-envelope"></i> Subscribers
+            </a>
+
+            <a href="{{ url_for('admin.newsletter_list') }}"
+               class="admin-nav-link {% if 'newsletter' in request.endpoint %}active{% endif %}">
+                <i class="text-xl fa-solid fa-mailchimp"></i> Newsletter
+            </a>
+
+            <a href="{{ url_for('admin.site_settings') }}"
+               class="admin-nav-link {% if 'site_settings' in request.endpoint %}active{% endif %}">
+                <i class="text-xl fa-solid fa-gear"></i> Settings
+            </a>
+
+        </nav>
+
+        <!-- Logout -->
+        <div class=" mt-15 border-t border-white/10">
+            <a href="{{ url_for('admin.logout') }}"
+               class="text-red-300 admin-nav-link hover:text-red-100 transition">
+                <i class="text-xl fa-solid fa-right-from-bracket"></i> Logout
+            </a>
+        </div>
+
+    </aside>
+
+    <!-- Main Content -->
+    <div class="lg:ml-64 min-h-screen transition-all duration-300">
+
+        <!-- Topbar -->
+        <header class="bg-white shadow sticky top-0 z-30">
+
+            <div class="flex items-center justify-between px-4 sm:px-6 py-4">
+
+                <!-- Left -->
+                <div class="flex items-center gap-4 ">
+
+                    <!-- Mobile Menu Button -->
+                    <button onclick="toggleSidebar()"
+                            class="lg:hidden text-[#141495]">
+
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             class="h-7 w-7"
+                             fill="none"
+                             viewBox="0 0 24 24"
+                             stroke="currentColor">
+
+                            <path stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M4 6h16M4 12h16M4 18h16" />
+
+                        </svg>
+
+                    </button>
+
+                    <h1 class="text-xl sm:text-2xl font-bold text-[#141495]">
+                        {% block page_title %}Dashboard{% endblock %}
+                    </h1>
+
+                </div>
+
+                <!-- Right -->
+                <div class="flex items-center gap-4">
+
+                    <span class="hidden sm:block text-sm text-gray-600">
+                        {{ current_user.username if current_user.is_authenticated else 'Guest' }}
+                    </span>
+
+                </div>
+
+            </div>
+
+        </header>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="px-4 sm:px-6 mt-6">
+                    {% for category, message in messages %}
+                        <div class="mb-4 rounded-xl px-5 py-4 border
+                            {% if category == 'danger' %}
+                                bg-red-100 border-red-300 text-red-700
+                            {% elif category == 'success' %}
+                                bg-green-100 border-green-300 text-green-700
+                            {% else %}
+                                bg-blue-100 border-blue-300 text-blue-700
+                            {% endif %}
+                        ">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page Content -->
+        <main class="p-4 sm:p-6 lg:p-8">
+            {% block content %}{% endblock %}
+        </main>
+
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>

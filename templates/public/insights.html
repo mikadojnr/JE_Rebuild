@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Insights & Blog - John & Eniola Consultancy{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero-section.insights-page {
+    background-image: url('{{ url_for("static", filename="images/highlight.jpg") }}') !important;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+
+</style>
+
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section insights-page">
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="breadcrumb mb-6"><a href="{{ url_for('public.home') }}">Home</a> / Insights</div>
+        <h1 class="text-5xl md:text-6xl font-bold mb-6">Insights from JE</h1>
+        <p class="text-xl text-gray-200">Stay informed with our latest insights, updates, and newsletters on financial strategies</p>
+    </div>
+</section>
+
+<!-- Blog Grid -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="mb-9 text-[#141495] text-3xl sm:text-4xl md:text-5xl font-bold leading-snug text-center">Our Latest Posts & Newsletters</h2>
+            <p class="text-lg text-gray-600">Explore our expert insights and newsletters on financial management and industry trends.</p>
+        </div>
+        
+        {% if posts.items %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            {% for post in posts.items %}
+            <a href="{{ url_for('public.blog_detail', slug=post.slug) }}" class="group">
+                <div class="insight-card h-full flex flex-col rounded-md">
+                    {% if post.featured_image %}
+                    <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="w-full h-48 object-cover mb-4 group-hover:scale-105 transition">
+                    {% endif %}
+                    
+                    <div class="p-3 pb-7">
+                        <p class="text-gray-500 mt-auto border-b border-b-gray-100 text-sm pb-2">Published on {{ post.published_at.strftime('%B %d, %Y') if post.published_at else 'Unpublished' }} by {{ post.author_name }}</p>
+
+                        <h3 class=" mt-3 font-bold text-lg text-gray-900 mb-2 group-hover:text-[#0800f0] transition line-clamp-2 flex-grow">{{ post.title }}</h3>
+                        <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ post.excerpt or post.content[:150] }}</p>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        <div class="flex justify-center items-center gap-4 mb-12">
+            {% if posts.has_prev %}
+            <a href="{{ url_for('public.insights', page=posts.prev_num) }}" class="px-4 py-2 border border-[#141495] text-[#141495] rounded hover:bg-[#141495] hover:text-white transition">← Previous</a>
+            {% endif %}
+            
+            {% for page_num in posts.iter_pages(left_edge=1, right_edge=5) %}
+                {% if page_num %}
+                    {% if page_num == posts.page %}
+                    <span class="w-10 h-10 rounded-full bg-[#141495] text-white flex items-center justify-center font-semibold">{{ page_num }}</span>
+                    {% else %}
+                    <a href="{{ url_for('public.insights', page=page_num) }}" class="w-10 h-10 rounded-full border border-[#141495] text-[#141495] flex items-center justify-center hover:bg-[#141495] hover:text-white transition">{{ page_num }}</a>
+                    {% endif %}
+                {% else %}
+                <span>...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if posts.has_next %}
+            <a href="{{ url_for('public.insights', page=posts.next_num) }}" class="px-4 py-2 border border-[#141495] text-[#141495] rounded hover:bg-[#141495] hover:text-white transition">Next →</a>
+            {% endif %}
+        </div>
+        {% else %}
+        <p class="text-center text-gray-500 text-lg py-12">No blog posts available yet.</p>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Newsletter CTA -->
+<section class="cta-section">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="mb-9 text-[#ffffff] text-3xl sm:text-4xl md:text-5xl font-bold leading-snug text-center">Stay Updated</h2>
+        <p class="text-xl text-gray-200 mb-10">Subscribe to our newsletter for the latest financial insights and updates.</p>
+        
+        <form id="newsletter-form" class="max-w-md mx-auto">
+
+            {{ newsletter_form.hidden_tag() }}
+
+            <div class="flex flex-col sm:flex-row gap-3">
+
+                {{ newsletter_form.email(
+                    class="flex-grow px-6 py-3 rounded-full bg-white text-[#141495] border-none",
+                    placeholder="Your email"
+                ) }}
+
+                <button type="submit" class="btn-primary px-8 border-1">
+                    Subscribe
+                </button>
+
+            </div>
+
+            <p class="text-sm text-gray-300 mt-3">
+                We respect your privacy. Unsubscribe at any time.
+            </p>
+
+        </form>
+    </div>
+</section>
+
+
+{% endblock %}

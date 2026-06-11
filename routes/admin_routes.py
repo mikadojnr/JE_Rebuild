@@ -1,0 +1,778 @@
+"""
+Admin Routes for John & Eniola Consultancy Dashboard
+"""
+
+from urllib.parse import urljoin, urlparse
+
+from urllib.parse import urljoin
+
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, current_app, flash
+from flask_login import login_required, login_user, logout_user, current_user
+from werkzeug.utils import secure_filename
+from functools import wraps
+import os
+from datetime import datetime
+
+from models import (
+    User, BlogPost, Service, TeamMember, Testimonial, 
+    Subscriber, Newsletter, Comment, SiteSettings, Media
+)
+from forms import (
+    LoginForm, BlogPostForm, ServiceForm, TeamMemberForm, 
+    TestimonialForm, SiteSettingsForm, NewsletterCampaignForm, CreateUserForm
+)
+from app import db, mail
+from flask_mail import Message
+
+admin_bp = Blueprint('admin', __name__)
+
+UPLOAD_FOLDER = 'static/uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'svg'}
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+def allowed_file(filename):
+    """Check if file extension is allowed"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def save_upload_file(file):
+    """Save uploaded file and return path"""
+    if file and file.filename and allowed_file(file.filename):
+        filename = secure_filename(f"{datetime.now().timestamp()}_{file.filename}")
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(filepath)
+        return f"/{filepath}"
+    return None
+
+
+def admin_required(f):
+    """Decorator to require admin login"""
+    @wraps(f)
+    @login_required
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_admin:
+            flash('You do not have permission to access this page.', 'danger')
+            return redirect(url_for('admin.dashboard'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+@admin_bp.route('/media/upload', methods=['POST'])
+@admin_required
+def upload_media():
+
+    file = request.files.get('file')
+
+    if not file:
+        return jsonify({'error': 'No file uploaded'}), 400
+
+    if not allowed_file(file.filename):
+        return jsonify({'error': 'Invalid file type'}), 400
+
+    filepath = save_upload_file(file)
+
+    media = Media(
+        filename=file.filename,
+        filepath=filepath,
+        mime_type=file.mimetype,
+        file_size=0
+    )
+
+    db.session.add(media)
+    db.session.commit()
+
+    return jsonify({
+        "location": filepath
+    })
+
+@admin_bp.route('/register', methods=['GET', 'POST'])
+# @login_required
+# @admin_required
+def register():
+    """Create New Admin User"""
+    
+    form = CreateUserForm()
+
+    if form.validate_on_submit():
+
+        user = User(
+            username=form.username.data.strip(),
+            email=form.email.data.strip().lower(),
+            is_admin=True
+        )
+
+        user.set_password(form.password.data)
+
+        db.session.add(user)
+        db.session.commit()
+
+        flash('Admin user created successfully.', 'success')
+
+        return redirect(url_for('admin.dashboard'))
+
+    return render_template('admin/register.html', form=form)
+
+
+@admin_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    """Admin Login"""
+    if current_user.is_authenticated:
+        return redirect(url_for('admin.dashboard'))
+    
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid username or password.', 'danger')
+            return redirect(url_for('admin.login'))
+        
+        login_user(user, remember=form.remember_me.data)
+        next_page = request.args.get('next')
+        
+        if not next_page or url_has_allowed_host_and_scheme(next_page):
+            next_page = url_for('admin.dashboard')
+        
+        return redirect(next_page)
+    
+    return render_template('admin/login.html', form=form)
+
+
+@admin_bp.route('/logout')
+@login_required
+def logout():
+    """Admin Logout"""
+    logout_user()
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('public.home'))
+
+
+@admin_bp.route('/')
+@admin_required
+def dashboard():
+    """Admin Dashboard"""
+    stats = {
+        'total_posts': BlogPost.query.count(),
+        'total_services': Service.query.count(),
+        'total_team': TeamMember.query.count(),
+        'total_subscribers': Subscriber.query.count(),
+        'total_comments': Comment.query.count(),
+        'pending_comments': Comment.query.filter_by(is_approved=False).count()
+    }
+    
+    return render_template('admin/dashboard.html', stats=stats)
+
+
+# ============ BLOG POST MANAGEMENT ============
+
+@admin_bp.route('/blog')
+@admin_required
+def blog_list():
+    """List all blog posts"""
+    page = request.args.get('page', 1, type=int)
+    posts = BlogPost.query.order_by(BlogPost.created_at.desc()).paginate(page=page, per_page=20)
+    return render_template('admin/blog/list.html', posts=posts)
+
+
+@admin_bp.route('/blog/create', methods=['GET', 'POST'])
+@admin_required
+def blog_create():
+    """Create new blog post"""
+    form = BlogPostForm()
+    
+    if form.validate_on_submit():
+        featured_image_path = None
+        if form.featured_image.data:
+            featured_image_path = save_upload_file(form.featured_image.data)
+        
+        tags = [tag.strip() for tag in form.tags.data.split(',')] if form.tags.data else []
+        
+        post = BlogPost(
+            title=form.title.data,
+            slug=form.slug.data,
+            excerpt=form.excerpt.data,
+            content=form.content.data,
+            featured_image=featured_image_path,
+            author_name=form.author_name.data or 'John & Eniola Team',
+            category=form.category.data or 'Insights',
+            tags=tags,
+            is_published=form.is_published.data,
+            published_at=datetime.utcnow() if form.is_published.data else None
+        )
+        
+        db.session.add(post)
+        db.session.commit()
+        
+        flash('Blog post created successfully!', 'success')
+        return redirect(url_for('admin.blog_list'))
+    
+    return render_template('admin/blog/form.html', form=form, action='Create')
+
+
+@admin_bp.route('/blog/<int:post_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def blog_edit(post_id):
+    """Edit blog post"""
+    post = BlogPost.query.get_or_404(post_id)
+    form = BlogPostForm()
+    
+    if form.validate_on_submit():
+        if form.featured_image.data:
+            featured_image_path = save_upload_file(form.featured_image.data)
+            post.featured_image = featured_image_path
+        
+        post.title = form.title.data
+        post.slug = form.slug.data
+        post.excerpt = form.excerpt.data
+        post.content = form.content.data
+        post.author_name = form.author_name.data or 'John & Eniola Team'
+        post.category = form.category.data or 'Insights'
+        post.is_published = form.is_published.data
+        
+        if form.tags.data:
+            post.tags = [tag.strip() for tag in form.tags.data.split(',')]
+        
+        if form.is_published.data and not post.published_at:
+            post.published_at = datetime.utcnow()
+        
+        db.session.commit()
+        flash('Blog post updated successfully!', 'success')
+        return redirect(url_for('admin.blog_list'))
+    
+    elif request.method == 'GET':
+        form.title.data = post.title
+        form.slug.data = post.slug
+        form.excerpt.data = post.excerpt
+        form.content.data = post.content
+        form.author_name.data = post.author_name
+        form.category.data = post.category
+        form.tags.data = ', '.join(post.tags) if post.tags else ''
+        form.is_published.data = post.is_published
+    
+    return render_template('admin/blog/form.html', form=form, action='Edit', post=post)
+
+
+@admin_bp.route('/blog/<int:post_id>/delete', methods=['POST'])
+@admin_required
+def blog_delete(post_id):
+    """Delete blog post"""
+    post = BlogPost.query.get_or_404(post_id)
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            db.session.delete(post)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Blog post deleted.'}), 200
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 400
+    
+    db.session.delete(post)
+    db.session.commit()
+    flash('Blog post deleted successfully!', 'success')
+    return redirect(url_for('admin.blog_list'))
+
+
+# ============ SERVICE MANAGEMENT ============
+
+@admin_bp.route('/services')
+@admin_required
+def services_list():
+    """List all services"""
+    services = Service.query.order_by(Service.order).all()
+    return render_template('admin/services/list.html', services=services)
+
+
+@admin_bp.route('/services/create', methods=['GET', 'POST'])
+@admin_required
+def service_create():
+    """Create new service"""
+    form = ServiceForm()
+    
+    if form.validate_on_submit():
+        key_features = [f.strip() for f in form.key_features.data.split('\n') if f.strip()] if form.key_features.data else []
+        
+        service = Service(
+            title=form.title.data,
+            slug=form.slug.data,
+            description=form.description.data,
+            excerpt=form.excerpt.data,
+            icon=form.icon.data,
+            key_features=key_features,
+            order=form.order.data or 0,
+            is_active=form.is_active.data
+        )
+        
+        db.session.add(service)
+        db.session.commit()
+        
+        flash('Service created successfully!', 'success')
+        return redirect(url_for('admin.services_list'))
+    
+    return render_template('admin/services/form.html', form=form, action='Create')
+
+
+@admin_bp.route('/services/<int:service_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def service_edit(service_id):
+    """Edit service"""
+    service = Service.query.get_or_404(service_id)
+    form = ServiceForm()
+    
+    if form.validate_on_submit():
+        service.title = form.title.data
+        service.slug = form.slug.data
+        service.description = form.description.data
+        service.excerpt = form.excerpt.data
+        service.icon = form.icon.data
+        service.order = form.order.data or 0
+        service.is_active = form.is_active.data
+        
+        if form.key_features.data:
+            service.key_features = [f.strip() for f in form.key_features.data.split('\n') if f.strip()]
+        
+        db.session.commit()
+        flash('Service updated successfully!', 'success')
+        return redirect(url_for('admin.services_list'))
+    
+    elif request.method == 'GET':
+        form.title.data = service.title
+        form.slug.data = service.slug
+        form.description.data = service.description
+        form.excerpt.data = service.excerpt
+        form.icon.data = service.icon
+        form.order.data = service.order
+        form.is_active.data = service.is_active
+        form.key_features.data = '\n'.join(service.key_features) if service.key_features else ''
+    
+    return render_template('admin/services/form.html', form=form, action='Edit', service=service)
+
+
+@admin_bp.route('/services/<int:service_id>/delete', methods=['POST'])
+@admin_required
+def service_delete(service_id):
+    """Delete service"""
+    service = Service.query.get_or_404(service_id)
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            db.session.delete(service)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Service deleted.'}), 200
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 400
+    
+    db.session.delete(service)
+    db.session.commit()
+    flash('Service deleted successfully!', 'success')
+    return redirect(url_for('admin.services_list'))
+
+
+# ============ TEAM MANAGEMENT ============
+
+@admin_bp.route('/team')
+@admin_required
+def team_list():
+    """List all team members"""
+    team = TeamMember.query.order_by(TeamMember.order).all()
+    return render_template('admin/team/list.html', team=team)
+
+
+@admin_bp.route('/team/create', methods=['GET', 'POST'])
+@admin_required
+def team_create():
+    """Create new team member"""
+    form = TeamMemberForm()
+    
+    if form.validate_on_submit():
+        image_path = None
+        if form.image.data:
+            image_path = save_upload_file(form.image.data)
+        
+        member = TeamMember(
+            name=form.name.data,
+            role=form.role.data,
+            bio=form.bio.data,
+            email=form.email.data,
+            image=image_path,
+            order=form.order.data or 0,
+            is_active=form.is_active.data
+        )
+        
+        db.session.add(member)
+        db.session.commit()
+        
+        flash('Team member created successfully!', 'success')
+        return redirect(url_for('admin.team_list'))
+    
+    return render_template('admin/team/form.html', form=form, action='Create')
+
+
+@admin_bp.route('/team/<int:member_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def team_edit(member_id):
+    """Edit team member"""
+    member = TeamMember.query.get_or_404(member_id)
+    form = TeamMemberForm()
+    
+    if form.validate_on_submit():
+        if form.image.data:
+            image_path = save_upload_file(form.image.data)
+            member.image = image_path
+        
+        member.name = form.name.data
+        member.role = form.role.data
+        member.bio = form.bio.data
+        member.email = form.email.data
+        member.order = form.order.data or 0
+        member.is_active = form.is_active.data
+        
+        db.session.commit()
+        flash('Team member updated successfully!', 'success')
+        return redirect(url_for('admin.team_list'))
+    
+    elif request.method == 'GET':
+        form.name.data = member.name
+        form.role.data = member.role
+        form.bio.data = member.bio
+        form.email.data = member.email
+        form.order.data = member.order
+        form.is_active.data = member.is_active
+    
+    return render_template('admin/team/form.html', form=form, action='Edit', member=member)
+
+
+@admin_bp.route('/team/<int:member_id>/delete', methods=['POST'])
+@admin_required
+def team_delete(member_id):
+    """Delete team member"""
+    member = TeamMember.query.get_or_404(member_id)
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            db.session.delete(member)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Team member deleted.'}), 200
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 400
+    
+    db.session.delete(member)
+    db.session.commit()
+    flash('Team member deleted successfully!', 'success')
+    return redirect(url_for('admin.team_list'))
+
+
+# ============ TESTIMONIAL MANAGEMENT ============
+
+@admin_bp.route('/testimonials')
+@admin_required
+def testimonials_list():
+    """List all testimonials"""
+    testimonials = Testimonial.query.order_by(Testimonial.order).all()
+    return render_template('admin/testimonials/list.html', testimonials=testimonials)
+
+
+@admin_bp.route('/testimonials/create', methods=['GET', 'POST'])
+@admin_required
+def testimonial_create():
+    """Create new testimonial"""
+    form = TestimonialForm()
+    
+    if form.validate_on_submit():
+        image_path = None
+        if form.client_image.data:
+            image_path = save_upload_file(form.client_image.data)
+        
+        testimonial = Testimonial(
+            client_name=form.client_name.data,
+            client_role=form.client_role.data,
+            content=form.content.data,
+            client_image=image_path,
+            rating=form.rating.data or 5,
+            order=form.order.data or 0,
+            is_active=form.is_active.data
+        )
+        
+        db.session.add(testimonial)
+        db.session.commit()
+        
+        flash('Testimonial created successfully!', 'success')
+        return redirect(url_for('admin.testimonials_list'))
+    
+    return render_template('admin/testimonials/form.html', form=form, action='Create')
+
+
+@admin_bp.route('/testimonials/<int:testimonial_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def testimonial_edit(testimonial_id):
+    """Edit testimonial"""
+    testimonial = Testimonial.query.get_or_404(testimonial_id)
+    form = TestimonialForm()
+    
+    if form.validate_on_submit():
+        if form.client_image.data:
+            image_path = save_upload_file(form.client_image.data)
+            testimonial.client_image = image_path
+        
+        testimonial.client_name = form.client_name.data
+        testimonial.client_role = form.client_role.data
+        testimonial.content = form.content.data
+        testimonial.rating = form.rating.data or 5
+        testimonial.order = form.order.data or 0
+        testimonial.is_active = form.is_active.data
+        
+        db.session.commit()
+        flash('Testimonial updated successfully!', 'success')
+        return redirect(url_for('admin.testimonials_list'))
+    
+    elif request.method == 'GET':
+        form.client_name.data = testimonial.client_name
+        form.client_role.data = testimonial.client_role
+        form.content.data = testimonial.content
+        form.rating.data = testimonial.rating
+        form.order.data = testimonial.order
+        form.is_active.data = testimonial.is_active
+    
+    return render_template('admin/testimonials/form.html', form=form, action='Edit', testimonial=testimonial)
+
+
+@admin_bp.route('/testimonials/<int:testimonial_id>/delete', methods=['POST'])
+@admin_required
+def testimonial_delete(testimonial_id):
+    """Delete testimonial"""
+    testimonial = Testimonial.query.get_or_404(testimonial_id)
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            db.session.delete(testimonial)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Testimonial deleted.'}), 200
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 400
+    
+    db.session.delete(testimonial)
+    db.session.commit()
+    flash('Testimonial deleted successfully!', 'success')
+    return redirect(url_for('admin.testimonials_list'))
+
+
+# ============ COMMENTS MANAGEMENT ============
+
+@admin_bp.route('/comments')
+@admin_required
+def comments_list():
+    """List all comments"""
+    page = request.args.get('page', 1, type=int)
+    status = request.args.get('status', 'pending')  # pending, approved
+    
+    if status == 'approved':
+        comments = Comment.query.filter_by(is_approved=True).order_by(Comment.created_at.desc()).paginate(page=page, per_page=20)
+    else:
+        comments = Comment.query.filter_by(is_approved=False).order_by(Comment.created_at.desc()).paginate(page=page, per_page=20)
+    
+    return render_template('admin/comments/list.html', comments=comments, status=status)
+
+
+@admin_bp.route('/comments/<int:comment_id>/approve', methods=['POST'])
+# @admin_required
+def comment_approve(comment_id):
+    """Approve a comment"""
+    comment = Comment.query.get_or_404(comment_id)
+    comment.is_approved = True
+    db.session.commit()
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': True, 'message': 'Comment approved.'}), 200
+    
+    flash('Comment approved.', 'success')
+    return redirect(url_for('admin.comments_list', status='pending'))
+
+
+@admin_bp.route('/comments/<int:comment_id>/delete', methods=['POST'])
+# @admin_required
+def comment_delete(comment_id):
+    """Delete a comment"""
+    comment = Comment.query.get_or_404(comment_id)
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            db.session.delete(comment)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Comment deleted.'}), 200
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 400
+    
+    db.session.delete(comment)
+    db.session.commit()
+    flash('Comment deleted.', 'success')
+    return redirect(request.referrer or url_for('admin.comments_list'))
+
+
+# ============ SITE SETTINGS ============
+
+@admin_bp.route('/settings', methods=['GET', 'POST'])
+# @admin_required
+def site_settings():
+    """Edit global site settings"""
+    settings = SiteSettings.query.first()
+    if not settings:
+        settings = SiteSettings()
+        db.session.add(settings)
+        db.session.commit()
+    
+    form = SiteSettingsForm()
+    
+    if form.validate_on_submit():
+        settings.company_name = form.company_name.data
+        settings.company_description = form.company_description.data
+        settings.phone_primary = form.phone_primary.data
+        settings.phone_secondary = form.phone_secondary.data
+        settings.email = form.email.data
+        settings.address = form.address.data
+        
+        # Handle logo uploads
+        if form.logo_image.data:
+            logo_path = save_upload_file(form.logo_image.data)
+            if logo_path:
+                settings.logo_image_path = logo_path
+        
+        if form.logo_dark_image.data:
+            logo_dark_path = save_upload_file(form.logo_dark_image.data)
+            if logo_dark_path:
+                settings.logo_dark_image_path = logo_dark_path
+        
+        # Handle social links
+        social_links = {}
+        if form.twitter.data:
+            social_links['twitter'] = form.twitter.data
+        if form.facebook.data:
+            social_links['facebook'] = form.facebook.data
+        if form.linkedin.data:
+            social_links['linkedin'] = form.linkedin.data
+        if form.instagram.data:
+            social_links['instagram'] = form.instagram.data
+        settings.social_links = social_links
+        
+        db.session.commit()
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': True, 'message': 'Settings updated successfully.'}), 200
+        
+        flash('Site settings updated successfully!', 'success')
+        return redirect(url_for('admin.site_settings'))
+    
+    elif request.method == 'GET':
+        form.company_name.data = settings.company_name
+        form.company_description.data = settings.company_description
+        form.phone_primary.data = settings.phone_primary
+        form.phone_secondary.data = settings.phone_secondary
+        form.email.data = settings.email
+        form.address.data = settings.address
+        
+        if settings.social_links:
+            form.twitter.data = settings.social_links.get('twitter')
+            form.facebook.data = settings.social_links.get('facebook')
+            form.linkedin.data = settings.social_links.get('linkedin')
+            form.instagram.data = settings.social_links.get('instagram')
+    
+    return render_template('admin/settings.html', form=form, settings=settings)
+
+
+# ============ NEWSLETTER MANAGEMENT ============
+
+@admin_bp.route('/newsletter')
+# @admin_required
+def newsletter_list():
+    """List all newsletters"""
+    newsletters = Newsletter.query.order_by(Newsletter.created_at.desc()).all()
+    return render_template('admin/newsletter/list.html', newsletters=newsletters)
+
+
+@admin_bp.route('/newsletter/create', methods=['GET', 'POST'])
+# @admin_required
+def newsletter_create():
+    """Create and send newsletter"""
+    form = NewsletterCampaignForm()
+    
+    if form.validate_on_submit():
+        subscribers = Subscriber.query.filter_by(is_active=True).all()
+        
+        if not subscribers:
+            flash('No active subscribers to send to.', 'warning')
+            return render_template('admin/newsletter/form.html', form=form, action='Create')
+        
+        try:
+            newsletter = Newsletter(
+                subject=form.subject.data,
+                content=form.content.data,
+                google_drive_link=form.google_drive_link.data,
+                is_sent=True,
+                sent_at=datetime.utcnow(),
+                sent_count=len(subscribers)
+            )
+            
+            # Send to all subscribers
+            for subscriber in subscribers:
+                msg = Message(
+                    subject=form.subject.data,
+                    recipients=[subscriber.email],
+                    html=form.content.data
+                )
+                mail.send(msg)
+            
+            db.session.add(newsletter)
+            db.session.commit()
+            
+            flash(f'Newsletter sent to {len(subscribers)} subscribers!', 'success')
+            return redirect(url_for('admin.newsletter_list'))
+        
+        except Exception as e:
+            current_app.logger.error(f'Error sending newsletter: {str(e)}')
+            flash('Error sending newsletter. Check email configuration.', 'danger')
+    
+    return render_template('admin/newsletter/form.html', form=form, action='Create')
+
+
+@admin_bp.route('/subscribers')
+# @admin_required
+def subscribers_list():
+    """List all subscribers"""
+    page = request.args.get('page', 1, type=int)
+    subscribers = Subscriber.query.order_by(Subscriber.created_at.desc()).paginate(page=page, per_page=50)
+    return render_template('admin/subscribers/list.html', subscribers=subscribers)
+
+
+@admin_bp.route('/subscribers/<int:subscriber_id>/delete', methods=['POST'])
+# @admin_required
+def subscriber_delete(subscriber_id):
+    """Delete subscriber"""
+    subscriber = Subscriber.query.get_or_404(subscriber_id)
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            db.session.delete(subscriber)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Subscriber removed.'}), 200
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 400
+    
+    db.session.delete(subscriber)
+    db.session.commit()
+    flash('Subscriber removed.', 'success')
+    return redirect(url_for('admin.subscribers_list'))
+
+
+def url_has_allowed_host_and_scheme(target):
+    """Validate redirect target"""
+
+    if not target:
+        return False
+
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+
+    return (
+        test_url.scheme in ('http', 'https')
+        and ref_url.netloc == test_url.netloc
+    )

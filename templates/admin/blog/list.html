@@ -1,0 +1,66 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Blog Posts{% endblock %}
+
+{% block content %}
+<div class="flex justify-end items-center mb-8">
+    <a href="{{ url_for('admin.blog_create') }}" class="bg-[#141495] text-white px-6 py-3 rounded hover:opacity-90 transition">
+        ➕ Create Post
+    </a>
+</div>
+
+{% if posts.items %}
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="w-full">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="px-6 py-3 text-left font-semibold">Title</th>
+                <th class="px-6 py-3 text-left font-semibold">Author</th>
+                <th class="px-6 py-3 text-left font-semibold">Status</th>
+                <th class="px-6 py-3 text-left font-semibold">Date</th>
+                <th class="px-6 py-3 text-right font-semibold">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y">
+            {% for post in posts.items %}
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4"><strong>{{ post.title[:50] }}...</strong></td>
+                <td class="px-6 py-4">{{ post.author_name }}</td>
+                <td class="px-6 py-4">
+                    <span class="px-3 py-1 rounded-full text-sm {% if post.is_published %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                        {% if post.is_published %}Published{% else %}Draft{% endif %}
+                    </span>
+                </td>
+                <td class="px-6 py-4">{{ post.created_at.strftime('%b %d, %Y') }}</td>
+                <td class="px-6 py-4 text-right space-x-2">
+                    <a href="{{ url_for('admin.blog_edit', post_id=post.id) }}" class="text-blue-600 hover:text-blue-800"><i class="fa fa-edit"></i></a>
+                    |
+                    <button onclick="deleteViaAjax('{{ url_for('admin.blog_delete', post_id=post.id) }}', 'tr')" class="text-red-600 hover:text-red-800"><i class="fa fa-trash"></i></button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+<div class="mt-6 flex justify-center gap-2">
+    {% for page_num in posts.iter_pages() %}
+        {% if page_num %}
+            {% if page_num == posts.page %}
+            <span class="px-4 py-2 bg-[#141495] text-white rounded">{{ page_num }}</span>
+            {% else %}
+            <a href="{{ url_for('admin.blog_list', page=page_num) }}" class="px-4 py-2 border border-[#141495] text-[#141495] rounded hover:bg-[#141495] hover:text-white">{{ page_num }}</a>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+</div>
+{% else %}
+<div class="bg-white rounded-lg shadow p-12 text-center">
+    <p class="text-gray-500 mb-4">No blog posts yet</p>
+    <a href="{{ url_for('admin.blog_create') }}" class="bg-[#141495] text-white px-6 py-3 rounded hover:opacity-90 transition">
+        ➕ Create First Post
+    </a>
+</div>
+{% endif %}
+{% endblock %}

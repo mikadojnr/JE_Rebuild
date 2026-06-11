@@ -1,0 +1,87 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Stats Cards -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-gray-600 text-sm font-semibold">Blog Posts</p>
+                <p class="text-4xl font-bold text-[#141495] mt-2">{{ stats.total_posts }}</p>
+            </div>
+            <div class="text-4xl"><i class="text-gray-500 fa-solid fa-file-pen"></i></div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-gray-600 text-sm font-semibold">Services</p>
+                <p class="text-4xl font-bold text-[#141495] mt-2">{{ stats.total_services }}</p>
+            </div>
+            <div class="text-4xl"><i class="text-gray-500 fa-solid fa-briefcase"></i></div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-gray-600 text-sm font-semibold">Team Members</p>
+                <p class="text-4xl font-bold text-[#141495] mt-2">{{ stats.total_team }}</p>
+            </div>
+            <div class="text-4xl"><i class="text-gray-500 fa-solid fa-users"></i></div>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-gray-600 text-sm font-semibold">Subscribers</p>
+                <p class="text-4xl font-bold text-[#141495] mt-2">{{ stats.total_subscribers }}</p>
+            </div>
+            <div class="text-4xl"><i class="text-gray-500 fa-solid fa-envelope"></i></div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Comments Status -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-xl font-bold text-[#141495] mb-4">Comments Status</h3>
+        <div class="space-y-4">
+            <div class="flex justify-between items-center p-4 bg-gray-50 rounded">
+                <span>Total Comments</span>
+                <span class="font-bold text-lg">{{ stats.total_comments }}</span>
+            </div>
+            <div class="flex justify-between items-center p-4 bg-yellow-50 rounded border border-yellow-200">
+                <span>Pending Approval</span>
+                <span class="font-bold text-lg text-orange-600">{{ stats.pending_comments }}</span>
+            </div>
+            <a href="{{ url_for('admin.comments_list') }}" class="block text-center mt-4 p-4 bg-[#141495] text-white rounded hover:opacity-90 font-semibold transition">
+                Manage Comments
+            </a>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-xl font-bold text-[#141495] mb-4">Quick Actions</h3>
+        <div class="space-y-3">
+            <a href="{{ url_for('admin.blog_create') }}" class="block w-full px-4 py-3 bg-[#141495] text-white rounded hover:opacity-90 transition text-center font-semibold">
+                <i class="text-xl fa-solid fa-file-pen"></i> Create Blog Post
+            </a>
+            <a href="{{ url_for('admin.service_create') }}" class="block w-full px-4 py-3 border-2 border-[#141495] text-[#141495] rounded hover:bg-[#141495] hover:text-white transition text-center font-semibold">
+                <i class="text-xl fa-solid fa-briefcase"></i> Add Service
+            </a>
+            <a href="{{ url_for('admin.team_create') }}" class="block w-full px-4 py-3 border-2 border-[#141495] text-[#141495] rounded hover:bg-[#141495] hover:text-white transition text-center font-semibold">
+                <i class="text-xl fa-solid fa-users"></i> Add Team Member
+            </a>
+            <a href="{{ url_for('admin.site_settings') }}" class="block w-full px-4 py-3 border-2 border-[#141495] text-[#141495] rounded hover:bg-[#141495] hover:text-white transition text-center font-semibold">
+                <i class="text-xl fa-solid fa-gear"></i> Site Settings
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

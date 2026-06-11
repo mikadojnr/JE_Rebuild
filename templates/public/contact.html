@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us - John & Eniola Consultancy{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero-section.contact-page {
+    background-image: url('{{ url_for("static", filename="images/je_telephone.jpg") }}') !important;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+</style>
+
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section contact-page">
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="breadcrumb mb-6"><a href="{{ url_for('public.home') }}">Home</a> / Contact</div>
+        <h1 class="text-5xl md:text-6xl font-bold mb-6">Contact Us</h1>
+        <p class="text-xl text-gray-200">We're here to help you achieve financial excellence. Reach out to discuss your goals</p>
+    </div>
+</section>
+
+<!-- Contact Form & Info -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+            <!-- Contact Form -->
+            <div >
+                <h4 class="mb-4 text-lg sm:text-xl md:text-2xl font-semibold leading-snug text-[#141495]">Get in Touch</h4>
+                <form method="POST" action="{{ url_for('public.contact') }}" id="contact-form" class="card">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-5">
+                        <label class="block text-sm font-semibold mb-2">{{ form.name.label }}</label>
+                        {{ form.name(class="form-control", placeholder="Your full name") }}
+                        {% if form.name.errors %}
+                        <p class="text-red-500 text-sm mt-1">{{ form.name.errors[0] }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-5">
+                        <label class="block text-sm font-semibold mb-2">{{ form.email.label }}</label>
+                        {{ form.email(class="form-control", placeholder="your.email@example.com", type="email") }}
+                        {% if form.email.errors %}
+                        <p class="text-red-500 text-sm mt-1">{{ form.email.errors[0] }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-5">
+                        <label class="block text-sm font-semibold mb-2">{{ form.subject.label }}</label>
+                        {{ form.subject(class="form-control", placeholder="Subject of your message") }}
+                        {% if form.subject.errors %}
+                        <p class="text-red-500 text-sm mt-1">{{ form.subject.errors[0] }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-5">
+                        <label class="block text-sm font-semibold mb-2">{{ form.message.label }}</label>
+                        {{ form.message(class="form-control", rows="6", placeholder="Your message...") }}
+                        {% if form.message.errors %}
+                        <p class="text-red-500 text-sm mt-1">{{ form.message.errors[0] }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn-primary w-full hover:text-[#141495]">Submit</button>
+                </form>
+            </div>
+            
+            <!-- Contact Information -->
+            <div>
+                <h4 class="mb-4 text-lg sm:text-xl md:text-2xl font-semibold leading-snug text-[#141495]">Contact Information</h4>
+                <div class="space-y-6">
+                    {% if site_settings.email %}
+                    <div>
+                        <h4 class="font-semibold mb-2">Email</h4>
+                        <a href="mailto:{{ site_settings.email }}" class="text-[#141495] hover:text-[#0800f0] transition">{{ site_settings.email }}</a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if site_settings.phone_primary or site_settings.phone_secondary %}
+                    <div>
+                        <h4 class="font-semibold mb-2">Phone</h4>
+                        <div class="space-y-1">
+                            {% if site_settings.phone_primary %}
+                            <a href="tel:{{ site_settings.phone_primary }}" class="block text-[#141495] hover:text-[#0800f0] transition">{{ site_settings.phone_primary }}</a>
+                            {% endif %}
+                            {% if site_settings.phone_secondary %}
+                            <a href="tel:{{ site_settings.phone_secondary }}" class="block text-[#141495] hover:text-[#0800f0] transition">{{ site_settings.phone_secondary }}</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if site_settings.address %}
+                    <div>
+                        <h4 class="font-semibold mb-2">Office Address</h4>
+                        <p class="text-gray-700">{{ site_settings.address }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Map -->
+                <div class="mt-10 rounded-lg overflow-hidden h-80 bg-gray-200">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3997.2617332978716!2d7.355561375045135!3d8.988903089615297!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2c1706890ec4f0b5%3A0x9c11e42d1efc7d!2sJohn%20%26%20Eniola%20Consultancy%20Limited!5e1!3m2!1sen!2sng!4v1779119622200!5m2!1sen!2sng" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Social Links -->
+<section class="py-12 bg-gray-50 border-t">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+        <div class="flex justify-center gap-6">
+            {% if site_settings.social_links.twitter %}
+            <a href="{{ site_settings.social_links.twitter }}" class="w-12 h-12 rounded-full bg-[#141495] text-white flex items-center justify-center hover:opacity-80 transition">
+                <span>𝕏</span>
+            </a>
+            {% endif %}
+            {% if site_settings.social_links.facebook %}
+            <a href="{{ site_settings.social_links.facebook }}" class="w-12 h-12 rounded-full bg-[#141495] text-white flex items-center justify-center hover:opacity-80 transition">
+                <span>f</span>
+            </a>
+            {% endif %}
+            {% if site_settings.social_links.linkedin %}
+            <a href="{{ site_settings.social_links.linkedin }}" class="w-12 h-12 rounded-full bg-[#141495] text-white flex items-center justify-center hover:opacity-80 transition">
+                <span>in</span>
+            </a>
+            {% endif %}
+            {% if site_settings.social_links.instagram %}
+            <a href="{{ site_settings.social_links.instagram }}" class="w-12 h-12 rounded-full bg-[#141495] text-white flex items-center justify-center hover:opacity-80 transition">
+                <span>📷</span>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<script>
+document.getElementById('contact-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Sending...';
+    submitBtn.disabled = true;
+    
+    fetch('{{ url_for('public.contact') }}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            document.getElementById('contact-form').reset();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error sending message');
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    });
+});
+</script>
+{% endblock %}

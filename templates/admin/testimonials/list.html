@@ -1,0 +1,24 @@
+{% extends "admin/base.html" %}
+{% block page_title %}Testimonials{% endblock %}
+{% block content %}
+<div class="flex justify-end items-center mb-8">
+    <a href="{{ url_for('admin.testimonial_create') }}" class="bg-[#141495] text-white px-6 py-3 rounded">➕ Add Testimonial</a>
+</div>
+{% if testimonials %}
+<div class="space-y-4">
+    {% for test in testimonials %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-start mb-3">
+            <div><p class="font-bold">{{ test.client_name }}</p><p class="text-sm text-gray-600">{{ test.client_role or 'Client' }}</p></div>
+            <div class="flex gap-1">{% for i in range(test.rating) %}<span class="text-[#ff6b35]">★</span>{% endfor %}</div>
+        </div>
+        <p class="text-gray-700 mb-4">{{ test.content[:150] }}...</p>
+        <div class="flex gap-2">
+            <a href="{{ url_for('admin.testimonial_edit', testimonial_id=test.id) }}" class="px-3 py-1 bg-blue-500 text-white rounded text-sm"><i class="fa fa-edit"></i></a>
+            <button onclick="deleteViaAjax('{{ url_for('admin.testimonial_delete', testimonial_id=test.id) }}')" class="px-3 py-1 bg-red-500 text-white rounded text-sm"><i class="fa fa-trash"></i></button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}<p class="text-gray-500">No testimonials yet</p>{% endif %}
+{% endblock %}

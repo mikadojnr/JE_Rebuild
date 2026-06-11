@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Services - John & Eniola Consultancy{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero-section.services-page {
+    background-image: url('{{ url_for("static", filename="images/services.jpg") }}') !important;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+.toggle-icon {
+    transition: transform 0.3s ease;
+}
+</style>
+
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section services-page">
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="breadcrumb mb-6"><a href="{{ url_for('public.home') }}">Home</a> / Services</div>
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-6 text-shadow text-white">Our Services</h1>
+        <p class="text-xl text-gray-200">Comprehensive financial solutions designed to drive your business success and maximize your competitive advantage</p>
+    </div>
+</section>
+
+<!-- Services Listing -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="mb-9 text-[#141495] text-3xl sm:text-4xl md:text-5xl font-bold leading-snug text-center">What We Offer</h2>
+        <p class="text-center text-gray-600 mb-16 max-w-2xl mx-auto">Click on each service below to explore detailed information about our offerings</p>
+        
+        <div class="space-y-6">
+            {% for service in services %}
+            <div class="service-card cursor-pointer service-item" data-service-id="{{ service.id }}">
+                <div class="bg-white">
+                    <div class="flex items-center justify-between p-4">
+                        <div class="flex items-center gap-6 flex-grow ">
+                            <div class="w-16 h-16 bg-[#141495] text-white rounded-lg flex items-center justify-center text-3xl flex-shrink-0">
+                                {{ service.icon or '📊' }}
+                            </div>
+                            <div>
+                                <h4 class="mb-3 text-lg sm:text-xl md:text-2xl font-semibold leading-snug text-[#141495]">{{ service.title }}</h4>
+                                <p class="text-gray-600 text-sm">{{ service.excerpt or service.description[:100] }}</p>
+                            </div>
+                        </div>
+                        <div class="text-[#141495] text-3xl transition-transform toggle-icon">▼</div>
+                    </div>
+                </div>
+                
+                <!-- Expanded Content -->
+                <div class="service-details hidden bg-gray-50 p-4">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-6">
+                        <div class="lg:col-span-2 pt-3">
+                            <p class="text-gray-700 leading-relaxed">{{ service.description }}</p>
+                        </div>
+                        
+                        {% if service.key_features %}
+                        <div class="bg-white p-3 rounded-lg border border-gray-200">
+                            <h4 class="font-semibold mb-4">Key Features</h4>
+                            <ul class="space-y-3">
+                                {% for feature in service.key_features %}
+                                <li class="flex items-start gap-3">
+                                    <span class="text-[#ff6b35] mt-1">✓</span>
+                                    <span class="text-sm text-gray-700">{{ feature }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <button class="btn-primary hover:text-[#141495]" onclick="document.location='{{ url_for('public.contact') }}'">Schedule Consultation</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us -->
+<section class="py-20 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="mb-20 text-[#141495] text-3xl sm:text-4xl md:text-5xl font-bold leading-snug text-center">Why Choose John & Eniola?</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="text-center card">
+                <div class="text-5xl mb-4">🎯</div>
+                <h4 class="mb-3 text-lg sm:text-xl md:text-2xl font-semibold leading-snug text-[#141495]">Tailored Solutions</h4>
+                <p class="text-gray-600">We customize our services to meet the unique needs and goals of each client.</p>
+            </div>
+            
+            <div class="text-center card">
+                <div class="text-5xl mb-4">👨‍💼</div>
+                <h4 class="mb-3 text-lg sm:text-xl md:text-2xl font-semibold leading-snug text-[#141495]">Expert Team</h4>
+                <p class="text-gray-600">Access to seasoned professionals with years of industry experience and proven track records.</p>
+            </div>
+            
+            <div class="text-center card">
+                <div class="text-5xl mb-4">📈</div>
+                <h4 class="mb-3 text-lg sm:text-xl md:text-2xl font-semibold leading-snug text-[#141495]">Proven Results</h4>
+                <p class="text-gray-600">Our clients consistently achieve their financial objectives with our strategic guidance.</p>
+            </div>
+            
+            <div class="text-center card">
+                <div class="text-5xl mb-4">💼</div>
+                <h4 class="mb-3 text-lg sm:text-xl md:text-2xl font-semibold leading-snug text-[#141495]">Strategic Approach</h4>
+                <p class="text-gray-600">We go beyond compliance to provide strategic insights that drive competitive advantage.</p>
+            </div>
+            
+            <div class="text-center card">
+                <div class="text-5xl mb-4">🔒</div>
+                <h4 class="mb-3 text-lg sm:text-xl md:text-2xl font-semibold leading-snug text-[#141495]">Confidentiality</h4>
+                <p class="text-gray-600">Your sensitive financial information is protected with the highest level of security and discretion.</p>
+            </div>
+            
+            <div class="text-center card">
+                <div class="text-5xl mb-4">⏰</div>
+                <h4 class="mb-3 text-lg sm:text-xl md:text-2xl font-semibold leading-snug text-[#141495]">Timely Delivery</h4>
+                <p class="text-gray-600">We understand the importance of deadlines and deliver results when you need them.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="py-20 cta-section text-white">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="mb-4 text-white text-3xl sm:text-4xl md:text-5xl font-bold leading-snug text-center">Ready to Transform Your Business?</h2>
+        <p class="text-xl text-gray-200 mb-10 max-w-2xl mx-auto">Contact us today to discover how our expert financial services can drive your success and help you achieve your business goals.</p>
+        <a href="{{ url_for('public.contact') }}" class="btn-primary">Get in Touch</a>
+    </div>
+</section>
+
+<script>
+document.querySelectorAll('.service-item').forEach(item => {
+    item.addEventListener('click', function() {
+        const details = this.querySelector('.service-details');
+        const icon = this.querySelector('.toggle-icon');
+        
+        // Close other items
+        document.querySelectorAll('.service-item').forEach(other => {
+            if (other !== this) {
+                other.querySelector('.service-details').classList.add('hidden');
+                other.querySelector('.toggle-icon').style.transform = 'rotate(0deg)';
+            }
+        });
+        
+        // Toggle current item
+        details.classList.toggle('hidden');
+        if (details.classList.contains('hidden')) {
+            icon.style.transform = 'rotate(0deg)';
+        } else {
+            icon.style.transform = 'rotate(180deg)';
+        }
+    });
+});
+</script>
+
+
+{% endblock %}

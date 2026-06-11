@@ -1,0 +1,38 @@
+{% extends "admin/base.html" %}
+{% block page_title %}Services{% endblock %}
+{% block content %}
+<div class="flex justify-end items-center mb-8">
+    <a href="{{ url_for('admin.service_create') }}" class="bg-[#141495] text-white px-6 py-3 rounded">➕ Add Service</a>
+</div>
+{% if services %}
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <table class="w-full">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="px-6 py-3 text-left font-semibold">Title</th>
+                <th class="px-6 py-3 text-left font-semibold">Status</th>
+                <th class="px-6 py-3 text-right font-semibold">Actions</th></tr>
+        </thead>
+        <tbody class="divide-y">
+            {% for service in services %}
+            <tr>
+                <td class="px-6 py-4">
+                    <strong>{{ service.title }}</strong>
+                </td>
+                <td class="px-6 py-4">
+                    <span class="px-3 py-1 rounded-full text-sm {% if service.is_active %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {% if service.is_active %}Active{% else %}Inactive{% endif %}
+                    </span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                    <a href="{{ url_for('admin.service_edit', service_id=service.id) }}" class="text-blue-600"><i class="fa fa-edit"></i></a>
+                    |
+                    <button onclick="deleteViaAjax('{{ url_for('admin.service_delete', service_id=service.id) }}', 'tr')" class="text-red-600 hover:text-red-800"><i class="fa fa-trash"></i></button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}<p class="text-gray-500">No services yet</p>{% endif %}
+{% endblock %}

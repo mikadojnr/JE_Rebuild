@@ -1,0 +1,122 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}
+    {{ action }} Testimonial
+{% endblock %}
+
+{% block content %}
+
+<div class="mx-auto">
+
+    <form method="POST"
+          enctype="multipart/form-data"
+          class="bg-white rounded-2xl shadow-lg p-5 sm:p-8 space-y-8">
+
+        {{ form.hidden_tag() }}
+
+        <!-- Header -->
+        <div class="border-b border-gray-200 pb-5">
+            <p class="text-gray-500 text-sm mt-1">
+                Manage client testimonial details and visibility.
+            </p>
+        </div>
+
+        <!-- Form Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Client Name -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Client Name
+                </label>
+
+                {{ form.client_name(
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#141495]/20 focus:border-[#141495] transition"
+                ) }}
+            </div>
+
+            <!-- Client Role -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Client Role / Company
+                </label>
+
+                {{ form.client_role(
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#141495]/20 focus:border-[#141495] transition"
+                ) }}
+            </div>
+
+            <!-- Rating -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Rating (1–5 Stars)
+                </label>
+
+                {{ form.rating(
+                    type="number",
+                    min="1",
+                    max="5",
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#141495]/20 focus:border-[#141495] transition"
+                ) }}
+            </div>
+
+            <!-- Client Image -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Client Image
+                </label>
+
+                {{ form.client_image(
+                    class="block w-full text-sm border border-gray-300 rounded-xl p-3"
+                ) }}
+            </div>
+
+            <!-- Testimonial Content -->
+            <div class="md:col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Testimonial
+                </label>
+
+                {{ form.content(
+                    rows=6,
+                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#141495]/20 focus:border-[#141495] transition"
+                ) }}
+            </div>
+
+            <!-- Active Status -->
+            <div class="md:col-span-2">
+                <label class="inline-flex items-center gap-3 cursor-pointer">
+
+                    {{ form.is_active(
+                        class="w-5 h-5 text-[#141495] border-gray-300 rounded focus:ring-[#141495]"
+                    ) }}
+
+                    <span class="text-sm font-semibold text-gray-700">
+                        Is Active?
+                    </span>
+
+                </label>
+            </div>
+
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-col sm:flex-row gap-4 pt-4 border-t border-gray-200">
+
+            <button type="submit"
+                    class="bg-[#141495] hover:bg-[#0f0f7a] text-white font-semibold px-8 py-3 rounded-xl transition shadow-md hover:shadow-lg">
+                Save Testimonial
+            </button>
+
+            <a href="{{ url_for('admin.testimonials_list') }}"
+               class="border border-gray-300 hover:bg-gray-100 text-gray-700 font-semibold px-8 py-3 rounded-xl transition text-center">
+                Cancel
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

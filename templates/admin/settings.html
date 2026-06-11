@@ -1,0 +1,226 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Site Settings{% endblock %}
+
+{% block content %}
+<div class="max-w-100">
+
+    <form method="POST" enctype="multipart/form-data" class="bg-white rounded-2xl shadow-lg p-5 sm:p-8 space-y-10">
+
+        {{ form.hidden_tag() }}
+
+        <!-- ================= COMPANY INFO ================= -->
+        <fieldset class="border-b border-gray-200 pb-8">
+            <legend class="text-2xl font-bold text-gray-800 mb-6">
+                Company Information
+            </legend>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- Company Name -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Company Name
+                    </label>
+
+                    {{ form.company_name(
+                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#141495]/20 focus:border-[#141495] outline-none transition"
+                    ) }}
+                </div>
+
+                <!-- Company Description -->
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Company Description
+                    </label>
+
+                    {{ form.company_description(
+                        rows=5,
+                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#141495]/20 focus:border-[#141495] outline-none transition"
+                    ) }}
+                </div>
+
+            </div>
+        </fieldset>
+
+        <!-- ================= CONTACT INFO ================= -->
+        <fieldset class="border-b border-gray-200 pb-8">
+            <legend class="text-2xl font-bold text-gray-800 mb-6">
+                Contact Information
+            </legend>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Primary Phone -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Primary Phone
+                    </label>
+
+                    {{ form.phone_primary(
+                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#141495]/20 focus:border-[#141495] outline-none transition"
+                    ) }}
+                </div>
+
+                <!-- Secondary Phone -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Secondary Phone
+                    </label>
+
+                    {{ form.phone_secondary(
+                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#141495]/20 focus:border-[#141495] outline-none transition"
+                    ) }}
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Email Address
+                    </label>
+
+                    {{ form.email(
+                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#141495]/20 focus:border-[#141495] outline-none transition"
+                    ) }}
+                </div>
+
+                <!-- Address -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Physical Address
+                    </label>
+
+                    {{ form.address(
+                        rows=4,
+                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#141495]/20 focus:border-[#141495] outline-none transition"
+                    ) }}
+                </div>
+
+            </div>
+        </fieldset>
+
+        <!-- ================= LOGOS ================= -->
+        <fieldset class="border-b border-gray-200 pb-8">
+            <legend class="text-2xl font-bold text-gray-800 mb-6">
+                Logo & Branding
+            </legend>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                <!-- Logo -->
+                <div class="space-y-4">
+                    <label class="block text-sm font-semibold text-gray-700">
+                        Logo Image
+                    </label>
+
+                    {% if settings.logo_image_path %}
+                    <div class="bg-gray-50 border rounded-xl p-4">
+                        <img src="{{ settings.logo_image_path }}"
+                            alt="Logo"
+                            class="h-16 object-contain">
+                    </div>
+                    {% endif %}
+
+                    {{ form.logo_image(
+                        class="block w-full text-sm border border-gray-300 rounded-xl p-3"
+                    ) }}
+                </div>
+
+                <!-- Dark Logo -->
+                <div class="space-y-4">
+                    <label class="block text-sm font-semibold text-gray-700">
+                        Dark Logo Image
+                    </label>
+
+                    {% if settings.logo_dark_image_path %}
+                    <div class="bg-gray-50 border rounded-xl p-4">
+                        <img src="{{ settings.logo_dark_image_path }}"
+                            alt="Dark Logo"
+                            class="h-16 object-contain">
+                    </div>
+                    {% endif %}
+
+                    {{ form.logo_dark_image(
+                        class="block w-full text-sm border border-gray-300 rounded-xl p-3"
+                    ) }}
+                </div>
+
+            </div>
+        </fieldset>
+
+        <!-- ================= SOCIAL LINKS ================= -->
+        <fieldset>
+            <legend class="text-2xl font-bold text-gray-800 mb-6">
+                Social Media Links
+            </legend>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Twitter -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Twitter
+                    </label>
+
+                    {{ form.twitter(
+                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#141495]/20 focus:border-[#141495] outline-none transition",
+                        placeholder="https://twitter.com/..."
+                    ) }}
+                </div>
+
+                <!-- Facebook -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Facebook
+                    </label>
+
+                    {{ form.facebook(
+                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#141495]/20 focus:border-[#141495] outline-none transition",
+                        placeholder="https://facebook.com/..."
+                    ) }}
+                </div>
+
+                <!-- LinkedIn -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        LinkedIn
+                    </label>
+
+                    {{ form.linkedin(
+                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#141495]/20 focus:border-[#141495] outline-none transition",
+                        placeholder="https://linkedin.com/..."
+                    ) }}
+                </div>
+
+                <!-- Instagram -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Instagram
+                    </label>
+
+                    {{ form.instagram(
+                        class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-[#141495]/20 focus:border-[#141495] outline-none transition",
+                        placeholder="https://instagram.com/..."
+                    ) }}
+                </div>
+
+            </div>
+        </fieldset>
+
+        <!-- ================= ACTIONS ================= -->
+        <div class="flex flex-col sm:flex-row gap-4 pt-4">
+
+            {{ form.submit(
+                class="bg-[#141495] hover:bg-[#0f0f7a] text-white font-semibold px-8 py-3 rounded-xl transition shadow-md hover:shadow-lg"
+            ) }}
+
+            <a href="{{ url_for('admin.dashboard') }}"
+            class="border border-gray-300 hover:bg-gray-100 text-gray-700 font-semibold px-8 py-3 rounded-xl transition text-center">
+                Cancel
+            </a>
+
+        </div>
+
+    </form>
+</div>
+{% endblock %}

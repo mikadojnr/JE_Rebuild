@@ -1,0 +1,74 @@
+<footer class="bg-[#141456] text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+            <!-- Company Info -->
+            <div>
+                <h3 class="font-bold text-lg mb-4">{{ site_settings.company_name or 'John & Eniola Consultancy' }}</h3>
+                <p class="text-gray-300 text-sm leading-relaxed">{{ site_settings.company_description or 'Your trusted partner in financial excellence. We provide comprehensive financial solutions that drive business success and sustainable growth.' }}</p>
+            </div>
+            
+            <!-- Services -->
+            <div>
+                <h4 class="font-bold text-lg mb-4">Services</h4>
+                <ul class="space-y-2 text-sm text-gray-300">
+                    <li><a href="{{ url_for('public.services') }}" class="hover:text-white transition">Fiscal Incentive Management</a></li>
+                    <li><a href="{{ url_for('public.services') }}" class="hover:text-white transition">Tax Planning</a></li>
+                    <li><a href="{{ url_for('public.services') }}" class="hover:text-white transition">Assurance Services</a></li>
+                    <li><a href="{{ url_for('public.services') }}" class="hover:text-white transition">Advisory Services</a></li>
+                    <li><a href="{{ url_for('public.services') }}" class="hover:text-white transition">Risk Management</a></li>
+                </ul>
+            </div>
+            
+            <!-- Contact Info -->
+            <div>
+                <h4 class="font-bold text-lg mb-4">Contact Info</h4>
+                <ul class="space-y-3 text-sm text-gray-300">
+                    <li><a href="mailto:{{ site_settings.email or 'info@johneniola.com' }}" class="hover:text-white transition">{{ site_settings.email or 'info@johneniola.com' }}</a></li>
+                    {% if site_settings.phone_primary %}
+                    <li><a href="tel:{{ site_settings.phone_primary }}" class="hover:text-white transition">{{ site_settings.phone_primary }}</a></li>
+                    {% endif %}
+                    {% if site_settings.phone_secondary %}
+                    <li><a href="tel:{{ site_settings.phone_secondary }}" class="hover:text-white transition">{{ site_settings.phone_secondary }}</a></li>
+                    {% endif %}
+                    {% if site_settings.address %}
+                    <li>{{ site_settings.address }}</li>
+                    {% endif %}
+                </ul>
+            </div>
+            
+            <!-- Quick Links -->
+            <div>
+                <h4 class="font-bold text-lg mb-4">Quick Links</h4>
+                <ul class="space-y-2 text-sm text-gray-300">
+                    <li><a href="{{ url_for('public.about') }}" class="hover:text-white transition">About Us</a></li>
+                    <li><a href="{{ url_for('public.insights') }}" class="hover:text-white transition">Insights</a></li>
+                    <li><a href="{{ url_for('public.contact') }}" class="hover:text-white transition">Contact</a></li>
+                    <!-- <li><a href="#" class="hover:text-white transition">Privacy Policy</a></li> -->
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Social Media -->
+        <div class="flex justify-center gap-6 mb-8">
+            {% if site_settings.social_links.twitter %}
+            <a href="{{ site_settings.social_links.twitter }}" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
+                <span class="text-lg">𝕏</span>
+            </a>
+            {% endif %}
+            {% if site_settings.social_links.facebook %}
+            <a href="{{ site_settings.social_links.facebook }}" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">f</a>
+            {% endif %}
+            {% if site_settings.social_links.linkedin %}
+            <a href="{{ site_settings.social_links.linkedin }}" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">in</a>
+            {% endif %}
+            {% if site_settings.social_links.instagram %}
+            <a href="{{ site_settings.social_links.instagram }}" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">📷</a>
+            {% endif %}
+        </div>
+        
+        <!-- Copyright -->
+        <div class="border-t border-white/10 pt-8 text-center text-sm text-gray-400">
+            <p>&copy; {{ current_year }} {{ site_settings.company_name or 'John & Eniola Consultancy' }}. All rights reserved.</p>
+        </div>
+    </div>
+</footer>

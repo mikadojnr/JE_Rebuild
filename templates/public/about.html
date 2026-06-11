@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}About John & Eniola Consultancy{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero-section.about-page {
+    background-image: url('{{ url_for("static", filename="images/conference_room.jpg") }}') !important;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+</style>
+
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section about-page">
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="breadcrumb mb-6"><a href="{{ url_for('public.home') }}">Home</a> / About Us</div>
+        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-6 text-shadow text-white">About John & Eniola</h1>
+        <p class="text-xl text-gray-200 text-shadow">Discover our story, mission, and the expert team behind Nigeria's premier financial consultancy</p>
+    </div>
+</section>
+
+<!-- Our Story -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-20">
+            <div>
+                <h2 class="mb-9 text-[#141495] text-3xl sm:text-4xl md:text-5xl font-bold leading-snug">Our Story</h2>
+                <p class="text-gray-700 mb-4 leading-relaxed">Founded with a vision to redefine financial excellence in Nigeria, John & Eniola Consultancy has grown from a small advisory firm to one of the most trusted names in financial services across West Africa.</p>
+                <p class="text-gray-700 mb-4 leading-relaxed">We recognized the need for comprehensive, strategic financial solutions that go beyond traditional accounting services. We bridge the gap between complex financial regulations and practical business needs.</p>
+                <p class="text-gray-700 leading-relaxed">Today, we proudly serve over 500 clients across diverse industries, managing assets worth over ₦2 billion and maintaining a 98% client satisfaction rate. Our success is built on unwavering commitment to excellence, integrity, and innovation.</p>
+            </div>
+            <div class="rounded-lg overflow-hidden h-96 bg-gradient-to-br from-[#141495] to-[#4d5dd9] flex items-center justify-center">
+                <img src="{{ url_for('static', filename='images/future.jpg') }}" alt="Team Meeting" class="w-full h-full object-cover">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Our Mission -->
+<section class="py-20 bg-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="mb-4 text-[#141495] text-3xl sm:text-4xl md:text-5xl font-bold leading-snug text-center">Our Mission</h2>
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">To build a strong client base by delivering quality and diversity through integrity</p>
+        </div>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div class="card text-center section-bg">
+                <div class="text-3xl font-bold text-white mb-2">500+</div>
+                <p class="text-gray-400">Satisfied Clients</p>
+            </div>
+            <div class="card text-center section-bg">
+                <div class="text-3xl font-bold text-white mb-2">15+</div>
+                <p class="text-gray-400">Years Experience</p>
+            </div>
+            <div class="card text-center section-bg">
+                <div class="text-3xl font-bold text-white mb-2">N2B+</div>
+                <p class="text-gray-400">Assets Managed</p>
+            </div>
+            <div class="card text-center section-bg">
+                <div class="text-3xl font-bold text-white mb-2">98%</div>
+                <p class="text-gray-400">Satisfaction Rate</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Core Values -->
+<section class="py-20 bg-[#141495]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="mb-4 text-white text-3xl sm:text-4xl md:text-5xl font-bold leading-snug text-center">Our Core Values</h2>
+        <p class="text-center text-gray-300 mb-16 max-w-2xl mx-auto">The principles that guide every decision we make and service we deliver</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-8">
+            <div class="card text-center">
+                <div class="w-16 h-16 mx-auto bg-[#141495] text-white rounded-full flex items-center justify-center text-3xl mb-6">
+                    🤝
+                </div>
+                <h3 class="mb-3 text-lg sm:text-2xl md:text-3xl font-semibold leading-snug text-[#141495]">Integrity</h3>
+                <p class="text-gray-600">Honesty and transparency form the foundation of all our client relationships and ensuring trust and ethical practices in all dealings.</p>
+            </div>
+            
+            <div class="card text-center">
+                <div class="w-16 h-16 mx-auto bg-[#141495] text-white rounded-full flex items-center justify-center text-3xl mb-6">
+                    🌍
+                </div>
+                <h3 class="mb-3 text-lg sm:text-2xl md:text-3xl font-semibold leading-snug text-[#141495]">Diversity</h3>
+                <p class="text-gray-600">We celebrate different perspectives and serve clients across a wide range of industries and sectors.</p>
+            </div>
+            
+            <div class="card text-center">
+                <div class="w-16 h-16 mx-auto bg-[#141495] text-white rounded-full flex items-center justify-center text-3xl mb-6">
+                    🔍
+                </div>
+                <h3 class="mb-3 text-lg sm:text-2xl md:text-3xl font-semibold leading-snug text-[#141495]">Due Diligence</h3>
+                <p class="text-gray-600">We conduct thorough analysis to ensure comprehensive understanding and protection of our clients' interests.</p>
+            </div>
+            
+            <div class="card text-center">
+                <div class="w-16 h-16 mx-auto bg-[#141495] text-white rounded-full flex items-center justify-center text-3xl mb-6">
+                    ⚡
+                </div>
+                <h3 class="mb-3 text-lg sm:text-2xl md:text-3xl font-semibold leading-snug text-[#141495]">Productivity</h3>
+                <p class="text-gray-600">We optimize processes to deliver efficient, high-impact solutions that maximize value for our clients.</p>
+            </div>
+            
+            <div class="card text-center">
+                <div class="w-16 h-16 mx-auto bg-[#141495] text-white rounded-full flex items-center justify-center text-3xl mb-6">
+                    👔
+                </div>
+                <h3 class="mb-3 text-lg sm:text-2xl md:text-3xl font-semibold leading-snug text-[#141495]">Professionalism</h3>
+                <p class="text-gray-600">We uphold the highest standards of professionalism, expertise, and service excellence in all our endeavors.</p>
+            </div>
+            
+            <div class="card text-center">
+                <div class="w-16 h-16 mx-auto bg-[#141495] text-white rounded-full flex items-center justify-center text-3xl mb-6">
+                    🔓
+                </div>
+                <h3 class="mb-3 text-lg sm:text-2xl md:text-3xl font-semibold leading-snug text-[#141495]">Transparency</h3>
+                <p class="text-gray-600">We maintain open communication, keeping clients informed and providing clear insights into our processes and recommendations.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Team Section -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="mb-4 text-[#141495] text-3xl sm:text-4xl md:text-5xl font-bold leading-snug text-center">Meet Our Expert Team</h2>
+        <p class="text-center text-gray-600 mb-16 max-w-2xl mx-auto">Seasoned professionals dedicated to your financial success</p>
+        
+        {% if team_members %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for member in team_members %}
+            <div class="card text-center group">
+                {% if member.image %}
+                <img src="{{ member.image }}" alt="{{ member.name }}" class="w-full h-64 object-cover rounded-lg mb-4 group-hover:scale-105 transition">
+                {% else %}
+                <div class="w-full h-64 bg-gradient-to-br from-[#141495] to-[#4d5dd9] rounded-lg flex items-center justify-center mb-4 text-6xl">
+                    👤
+                </div>
+                {% endif %}
+                <h4 class="text-lg sm:text-xl md:text2xl font-semibold mb-1">{{ member.name }}</h4>
+                <p class="text-gray-500 mb-3">{{ member.role }}</p>
+                {% if member.bio %}
+                <!-- <p class="text-gray-600 text-sm mb-4">{{ member.bio }}</p> -->
+                {% endif %}
+                {% if member.email %}
+                <!-- <a href="mailto:{{ member.email }}" class="text-[#141495] hover:text-[#ff6b35] transition text-sm">{{ member.email }}</a> -->
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-center text-gray-500 text-lg">Team members will be added soon.</p>
+        {% endif %}
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="py-20 cta-section text-white">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="mb-4 text-white text-3xl sm:text-4xl md:text-5xl font-bold leading-snug text-center">Ready to Work with Us?</h2>
+        <p class="text-xl text-gray-200 mb-10 max-w-2xl mx-auto">Discover how our comprehensive financial services can transform your business, boost your goals and create a customized solution.</p>
+        <div class="flex flex-col sm:flex-row justify-center gap-6">
+            <button class="btn-primary" onclick="document.location='{{ url_for('public.contact') }}'">Schedule Consultation</button>
+            <a href="{{ url_for('public.services') }}" class="btn-secondary">Explore Our Services</a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

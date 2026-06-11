@@ -1,0 +1,26 @@
+{% extends "admin/base.html" %}
+{% block page_title %}Team Members{% endblock %}
+{% block content %}
+<div class="flex justify-end items-center mb-8">
+    <a href="{{ url_for('admin.team_create') }}" class="bg-[#141495] text-white px-6 py-3 rounded">➕ Add Member</a>
+</div>
+{% if team %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for member in team %}
+    <div class="bg-white rounded-lg shadow p-6">
+        {% if member.image %}<img src="{{ member.image }}" alt="{{ member.name }}" class="w-full h-40 object-cover rounded mb-4">{% endif %}
+        <h3 class="font-bold text-lg">{{ member.name }}</h3>
+        <p class="text-sm text-gray-600 mb-4">{{ member.role }}</p>
+        <div class="flex gap-2">
+            <a href="{{ url_for('admin.team_edit', member_id=member.id) }}" class="flex-1 px-3 py-2 bg-blue-500 text-white rounded text-center text-sm">
+                <i class="fa fa-edit"></i>
+            </a>
+            <button onclick="deleteViaAjax('{{ url_for('admin.team_delete', member_id=member.id) }}')" class="flex-1 px-3 py-2 bg-red-500 text-white rounded text-center text-sm">
+                <i class="fa fa-trash"></i>
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}<p class="text-gray-500">No team members yet</p>{% endif %}
+{% endblock %}

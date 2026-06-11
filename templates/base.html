@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#141495">
+    <title>{% block title %}John & Eniola Consultancy{% endblock %}</title>
+    <meta name="description" content="{% block description %}Your trusted partner in financial excellence.{% endblock %}">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% include 'public/navbar.html' %}
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="fixed top-0 left-0 right-0 z-50">
+                {% for category, message in messages %}
+                    <div class="bg-{{ 'red' if category == 'danger' else 'green' if category == 'success' else 'blue' }}-500 text-white px-6 py-4 text-center">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    {% block content %}{% endblock %}
+    
+    {% include 'public/footer.html' %}
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+
+    <script>
+    document.getElementById('newsletter-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Subscribing...';
+        submitBtn.disabled = true;
+        
+        fetch('{{ url_for('public.newsletter_subscribe') }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+
+                if (data.errors) {
+                    console.log(data.errors);
+                }
+
+                alert(data.message);
+                
+                return;
+            }
+
+            if (data.success) {
+                alert(data.message);
+                document.getElementById('newsletter-form').reset();
+            }
+        })
+        .catch(error => {
+            alert('Error subscribing');
+            console.error('Error:', error);
+        })
+        .finally(() => {
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        });
+    });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
