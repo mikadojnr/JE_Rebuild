@@ -688,51 +688,42 @@ def newsletter_list():
     newsletters = Newsletter.query.order_by(Newsletter.created_at.desc()).all()
     return render_template('admin/newsletter/list.html', newsletters=newsletters)
 
-
 @admin_bp.route('/newsletter/create', methods=['GET', 'POST'])
-# @admin_required
 def newsletter_create():
-    """Create and send newsletter"""
     form = NewsletterCampaignForm()
-    
+
     if form.validate_on_submit():
         subscribers = Subscriber.query.filter_by(is_active=True).all()
-        
-        if not subscribers:
-            flash('No active subscribers to send to.', 'warning')
-            return render_template('admin/newsletter/form.html', form=form, action='Create')
-        
-        try:
-            newsletter = Newsletter(
-                subject=form.subject.data,
-                content=form.content.data,
-                google_drive_link=form.google_drive_link.data,
-                is_sent=True,
-                sent_at=datetime.utcnow(),
-                sent_count=len(subscribers)
-            )
-            
-            # Send to all subscribers
-            for subscriber in subscribers:
-                msg = Message(
-                    subject=form.subject.data,
-                    recipients=[subscriber.email],
-                    html=form.content.data
-                )
-                mail.send(msg)
-            
-            db.session.add(newsletter)
-            db.session.commit()
-            
-            flash(f'Newsletter sent to {len(subscribers)} subscribers!', 'success')
-            return redirect(url_for('admin.newsletter_list'))
-        
-        except Exception as e:
-            current_app.logger.error(f'Error sending newsletter: {str(e)}')
-            flash('Error sending newsletter. Check email configuration.', 'danger')
-    
-    return render_template('admin/newsletter/form.html', form=form, action='Create')
 
+        if not subscribers:
+            flash('No active subscribers.', 'warning')
+            return render_template(...)
+
+        newsletter = Newsletter(
+            subject=form.subject.data,
+            content=form.content.data,
+            google_drive_link=form.google_drive_link.data,
+            is_sent=True,
+            sent_at=datetime.utcnow(),
+            sent_count=len(subscribers)
+        )
+
+        db.session.add(newsletter)
+        db.session.commit()
+
+        from tasks import send_email_task
+
+        for sub in subscribers:
+            send_email_task.delay(
+                form.subject.data,
+                sub.email,
+                form.content.data
+            )
+
+        flash(f'Newsletter queued for {len(subscribers)} subscribers!', 'success')
+        return redirect(url_for('admin.newsletter_list'))
+
+    return render_template('admin/newsletter/form.html', form=form, action='Create')
 
 @admin_bp.route('/subscribers')
 # @admin_required

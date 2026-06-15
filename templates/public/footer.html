@@ -45,26 +45,12 @@
                     <li><a href="{{ url_for('public.contact') }}" class="hover:text-white transition">Contact</a></li>
                     <!-- <li><a href="#" class="hover:text-white transition">Privacy Policy</a></li> -->
                 </ul>
+
+                <!-- Social Media -->
+                {% include 'public/socials.html' %}
             </div>
         </div>
         
-        <!-- Social Media -->
-        <div class="flex justify-center gap-6 mb-8">
-            {% if site_settings.social_links.twitter %}
-            <a href="{{ site_settings.social_links.twitter }}" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
-                <span class="text-lg">𝕏</span>
-            </a>
-            {% endif %}
-            {% if site_settings.social_links.facebook %}
-            <a href="{{ site_settings.social_links.facebook }}" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">f</a>
-            {% endif %}
-            {% if site_settings.social_links.linkedin %}
-            <a href="{{ site_settings.social_links.linkedin }}" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">in</a>
-            {% endif %}
-            {% if site_settings.social_links.instagram %}
-            <a href="{{ site_settings.social_links.instagram }}" class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">📷</a>
-            {% endif %}
-        </div>
         
         <!-- Copyright -->
         <div class="border-t border-white/10 pt-8 text-center text-sm text-gray-400">

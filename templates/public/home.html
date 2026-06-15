@@ -253,16 +253,16 @@
         <h2 class="mb-10 text-[#141495] text-3xl sm:text-4xl md:text-5xl font-bold leading-snug text-center">Trusted by Leading Organizations</h2>
         <div class="flex flex-wrap justify-center items-center gap-12">
             <div class="h-16 px-8 flex items-center opacity-100 hover:opacity-60 transition">
-                <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg"><i class="fa-solid fa-lock"></i></span>
+                <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg"><i class="fa-solid fa-lock"></i> LOCKED</span>
             </div>
             <div class="h-16 px-8 flex items-center opacity-100 hover:opacity-60 transition">
-                <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg"><i class="fa-solid fa-lock"></i></span>
+                <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg"><i class="fa-solid fa-lock"></i> LOCKED</span>
             </div>
             <div class="h-16 px-8 flex items-center opacity-100 hover:opacity-60 transition">
-                <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg"><i class="fa-solid fa-lock"></i></span>
+                <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg"><i class="fa-solid fa-lock"></i> LOCKED</span>
             </div>
             <div class="h-16 px-8 flex items-center opacity-100 hover:opacity-60 transition">
-                <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg"><i class="fa-solid fa-lock"></i></span>
+                <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg"><i class="fa-solid fa-lock"></i> LOCKED</span>
             </div>
            
         </div>
@@ -341,8 +341,8 @@
         <div class="text-center mt-14">
             <a href="https://www.youtube.com/channel/UCM2WH7pQgOoexI5S52k9pAQ"
                target="_blank"
-               class="cta-btn cta-primary text-center text-[#141495]">
-                Visit Our YouTube Channel <i class="fab fa-youtube"></i>
+               class="cta-btn cta-primary text-center">
+                <span class="text-[#141495]">Visit Our YouTube Channel</span> <i class="fab fa-youtube text-red"></i>
             </a>
         </div>
     </div>
@@ -473,6 +473,29 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="flex flex-col sm:flex-row justify-center gap-6">
             <button class="btn-primary" onclick="document.location='{{ url_for('public.contact') }}'">Schedule Consultation</button>
             <a href="{{ url_for('public.insights') }}" class="btn-secondary">Explore Our Insights</a>
+        </div>
+    </div>
+    
+    <div class="flex flex-wrap justify-center gap-12 mt-8">
+        <div class="flex items-center gap-2 text-base">
+            <span class="flex items-center justify-center w-6 h-6 text-xs rounded-full bg-white/10">
+                ✓
+            </span>
+            <span>Free Initial Consultation</span>
+        </div>
+
+        <div class="flex items-center gap-2 text-base">
+            <span class="flex items-center justify-center w-6 h-6 text-xs rounded-full bg-white/10">
+                ✓
+            </span>
+            <span>Expert Financial Analysis</span>
+        </div>
+
+        <div class="flex items-center gap-2 text-base">
+            <span class="flex items-center justify-center w-6 h-6 text-xs rounded-full bg-white/10">
+                ✓
+            </span>
+            <span>Customized Solutions</span>
         </div>
     </div>
 </section>

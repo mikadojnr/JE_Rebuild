@@ -40,13 +40,25 @@ def create_app():
     )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
-    # Mail configuration
+    # === MAIL CONFIGURATION ===
     app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
     app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
-    app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', True)
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USE_SSL'] = False
     app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-    app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_DEFAULT_SENDER', 'noreply@johneniola.com')
+    app.config['MAIL_DEFAULT_SENDER'] = (
+        os.getenv('MAIL_DEFAULT_SENDER_NAME', 'John & Eniola Consultancy'),
+        os.getenv('MAIL_DEFAULT_SENDER')
+    )
+
+    # === CELERY CONFIGURATION ===
+    
+    app.config['CELERY_BROKER_URL'] = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+    app.config['CELERY_RESULT_BACKEND'] = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+    app.config['CELERY_TASK_SERIALIZER'] = 'json'
+    app.config['CELERY_RESULT_SERIALIZER'] = 'json'
+    app.config['CELERY_ACCEPT_CONTENT'] = ['json']
     
     # Initialize extensions with app
     db.init_app(app)
@@ -54,6 +66,13 @@ def create_app():
     login_manager.login_view = 'admin.login'
     mail.init_app(app)
     migrate.init_app(app, db)
+
+
+    from celery_config import celery as celery_app, make_celery
+    celery = make_celery(app)           # Configure it
+    app.celery = celery                 # Optional: attach to app
+
+
     from models import SiteSettings
 
     from forms import NewsletterForm

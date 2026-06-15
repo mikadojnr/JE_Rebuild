@@ -1,0 +1,51 @@
+<!-- Social Media -->
+<div class="flex gap-6 mt-8 text-md">
+    {% if site_settings.social_links.twitter %}
+    <a href="{{ site_settings.social_links.twitter }}" target="_blank" rel="noopener"
+    class="flex items-center justify-center w-10 h-10 rounded-full
+            bg-gradient-to-br from-[#141495] to-[#0800f0]
+            text-white shadow-[0_5px_15px_rgba(8,46,79,0.2)]
+            transition-all duration-300
+            hover:-translate-y-0.5 hover:shadow-lg
+            hover:bg-gradient-to-br hover:from-[#0800f0] hover:to-[#141495]">
+        <i class="fa-brands fa-x-twitter"></i>
+    </a>
+    {% endif %}
+
+    {% if site_settings.social_links.facebook %}
+    <a href="{{ site_settings.social_links.facebook }}" target="_blank" rel="noopener"
+    class="flex items-center justify-center w-10 h-10 rounded-full
+            bg-gradient-to-br from-[#141495] to-[#0800f0]
+            text-white shadow-[0_5px_15px_rgba(8,46,79,0.2)]
+            transition-all duration-300
+            hover:-translate-y-0.5 hover:shadow-lg
+            hover:bg-gradient-to-br hover:from-[#0800f0] hover:to-[#141495]">
+        <i class="fa-brands fa-facebook-f"></i>
+    </a>
+    {% endif %}
+
+    {% if site_settings.social_links.linkedin %}
+    <a href="{{ site_settings.social_links.linkedin }}" target="_blank" rel="noopener"
+    class="flex items-center justify-center w-10 h-10 rounded-full
+            bg-gradient-to-br from-[#141495] to-[#0800f0]
+            text-white shadow-[0_5px_15px_rgba(8,46,79,0.2)]
+            transition-all duration-300
+            hover:-translate-y-0.5 hover:shadow-lg
+            hover:bg-gradient-to-br hover:from-[#0800f0] hover:to-[#141495]">
+        <i class="fa-brands fa-linkedin-in"></i>
+    </a>
+    {% endif %}
+
+    {% if site_settings.social_links.instagram %}
+    <a href="{{ site_settings.social_links.instagram }}" target="_blank" rel="noopener"
+    class="flex items-center justify-center w-10 h-10 rounded-full
+            bg-gradient-to-br from-[#141495] to-[#0800f0]
+            text-white shadow-[0_5px_15px_rgba(8,46,79,0.2)]
+            transition-all duration-300
+            hover:-translate-y-0.5 hover:shadow-lg
+            hover:bg-gradient-to-br hover:from-[#0800f0] hover:to-[#141495]">
+        <i class="fa-brands fa-instagram"></i>
+    </a>
+    {% endif %}
+
+</div>
