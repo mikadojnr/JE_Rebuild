@@ -52,13 +52,21 @@ def create_app():
         os.getenv('MAIL_DEFAULT_SENDER')
     )
 
-    # === CELERY CONFIGURATION ===
-    
+    # Celery Config
     app.config['CELERY_BROKER_URL'] = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
     app.config['CELERY_RESULT_BACKEND'] = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
-    app.config['CELERY_TASK_SERIALIZER'] = 'json'
-    app.config['CELERY_RESULT_SERIALIZER'] = 'json'
-    app.config['CELERY_ACCEPT_CONTENT'] = ['json']
+
+    # Initialize Celery
+    from celery_config import make_celery
+    celery = make_celery(app)
+    app.celery = celery
+
+    # === CELERY CONFIGURATION ===
+    # app.config['CELERY_BROKER_URL'] = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+    # app.config['CELERY_RESULT_BACKEND'] = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+    # app.config['CELERY_TASK_SERIALIZER'] = 'json'
+    # app.config['CELERY_RESULT_SERIALIZER'] = 'json'
+    # app.config['CELERY_ACCEPT_CONTENT'] = ['json']
     
     # Initialize extensions with app
     db.init_app(app)

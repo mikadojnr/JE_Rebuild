@@ -4,7 +4,7 @@ Flask-WTF Forms for John & Eniola Consultancy
 
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, PasswordField, TextAreaField, BooleanField, SubmitField, SelectField, IntegerField
+from wtforms import StringField, PasswordField, TextAreaField, BooleanField, SubmitField, SelectField, IntegerField, URLField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError, Optional, NumberRange
 from models import User
 
@@ -25,8 +25,19 @@ class ContactForm(FlaskForm):
     message = TextAreaField('Your message', validators=[Optional(), Length(max=5000)])
     submit = SubmitField('Submit')
 
-
+    
 class NewsletterForm(FlaskForm):
+    title = StringField('Newsletter Title', validators=[DataRequired()])
+    subject = StringField('Email Subject', validators=[DataRequired()])
+    excerpt = TextAreaField('Short Description')
+    content = TextAreaField('Email Body Content (HTML)', validators=[DataRequired()])
+    google_drive_link = URLField('Google Drive Link')
+    pdf_url = URLField('Direct PDF Link (Optional)')
+    featured_image = FileField('Featured Image')
+    is_published = BooleanField('Publish on Website', default=True)
+    submit = SubmitField('Save Newsletter')
+
+class SubscribeNewsletterForm(FlaskForm):
     """Newsletter Subscription Form"""
     email = StringField('Your email', validators=[DataRequired(), Email()])
     name = StringField('Your name (optional)', validators=[Optional(), Length(max=255)])

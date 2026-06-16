@@ -8,10 +8,10 @@ import requests
 from flask_mail import Message
 from sqlalchemy import desc
 from models import (
-    BlogPost, Service, Testimonial, TeamMember, Subscriber, 
+    BlogPost, Newsletter, Service, Testimonial, TeamMember, Subscriber, 
     Comment, SiteSettings, Media
 )
-from forms import ContactForm, NewsletterForm, CommentForm
+from forms import ContactForm, NewsletterForm, CommentForm, SubscribeNewsletterForm
 from app import db, mail
 from bleach import clean
 from datetime import datetime
@@ -138,15 +138,36 @@ def services():
     return render_template('public/services.html', services=services)
 
 
+# @public_bp.route('/insights')
+# def insights():
+#     """Insights/Blog Page"""
+#     page = request.args.get('page', 1, type=int)
+#     posts = BlogPost.query.filter_by(is_published=True).order_by(
+#         desc(BlogPost.published_at)
+#     ).paginate(page=page, per_page=9)
+    
+#     return render_template('public/insights.html', posts=posts)
+
+
 @public_bp.route('/insights')
 def insights():
-    """Insights/Blog Page"""
     page = request.args.get('page', 1, type=int)
-    posts = BlogPost.query.filter_by(is_published=True).order_by(
-        desc(BlogPost.published_at)
-    ).paginate(page=page, per_page=9)
     
-    return render_template('public/insights.html', posts=posts)
+    # Combine Blog Posts + Newsletters
+    posts = BlogPost.query.filter_by(is_published=True).order_by(desc(BlogPost.published_at))
+    newsletters = Newsletter.query.filter_by(is_published=True).order_by(desc(Newsletter.published_at))
+    
+    # Union them (simple way)
+    all_items = list(posts.all()) + list(newsletters.all())
+    all_items.sort(key=lambda x: x.published_at or x.created_at, reverse=True)
+    
+    # Paginate manually or use simple pagination
+    per_page = 9
+    total = len(all_items)
+    start = (page - 1) * per_page
+    paginated_items = all_items[start:start + per_page]
+    
+    return render_template('public/insights.html', posts=paginated_items)  # Note: renamed to items in template if needed
 
 
 @public_bp.route('/insights/<string:slug>', methods=['GET', 'POST'])
@@ -324,7 +345,7 @@ def contact():
 @public_bp.route('/newsletter/subscribe', methods=['POST'])
 def newsletter_subscribe():
     """Newsletter Subscription (AJAX)"""
-    form = NewsletterForm()
+    form = SubscribeNewsletterForm()
     
     if form.validate_on_submit():
         try:

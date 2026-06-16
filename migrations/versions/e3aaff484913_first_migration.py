@@ -1,8 +1,8 @@
-"""first migrate
+"""first migration
 
-Revision ID: 5555724770bb
+Revision ID: e3aaff484913
 Revises: 
-Create Date: 2026-06-04 17:42:40.839829
+Create Date: 2026-06-16 19:26:07.104996
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = '5555724770bb'
+revision = 'e3aaff484913'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -50,9 +50,16 @@ def upgrade():
     )
     op.create_table('newsletters',
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('title', sa.String(length=255), nullable=False),
+    sa.Column('slug', sa.String(length=255), nullable=False),
     sa.Column('subject', sa.String(length=255), nullable=False),
+    sa.Column('excerpt', sa.String(length=500), nullable=True),
     sa.Column('content', sa.Text(), nullable=False),
     sa.Column('google_drive_link', sa.String(length=500), nullable=True),
+    sa.Column('pdf_url', sa.String(length=500), nullable=True),
+    sa.Column('featured_image', sa.String(length=255), nullable=True),
+    sa.Column('is_published', sa.Boolean(), nullable=True),
+    sa.Column('published_at', sa.DateTime(), nullable=True),
     sa.Column('sent_count', sa.Integer(), nullable=True),
     sa.Column('is_sent', sa.Boolean(), nullable=True),
     sa.Column('sent_at', sa.DateTime(), nullable=True),
@@ -60,6 +67,9 @@ def upgrade():
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
+    with op.batch_alter_table('newsletters', schema=None) as batch_op:
+        batch_op.create_index(batch_op.f('ix_newsletters_slug'), ['slug'], unique=True)
+
     op.create_table('services',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(length=255), nullable=False),
@@ -186,6 +196,9 @@ def downgrade():
     op.drop_table('subscribers')
     op.drop_table('site_settings')
     op.drop_table('services')
+    with op.batch_alter_table('newsletters', schema=None) as batch_op:
+        batch_op.drop_index(batch_op.f('ix_newsletters_slug'))
+
     op.drop_table('newsletters')
     op.drop_table('media')
     op.drop_table('blog_posts')
