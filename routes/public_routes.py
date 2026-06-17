@@ -138,36 +138,15 @@ def services():
     return render_template('public/services.html', services=services)
 
 
-# @public_bp.route('/insights')
-# def insights():
-#     """Insights/Blog Page"""
-#     page = request.args.get('page', 1, type=int)
-#     posts = BlogPost.query.filter_by(is_published=True).order_by(
-#         desc(BlogPost.published_at)
-#     ).paginate(page=page, per_page=9)
-    
-#     return render_template('public/insights.html', posts=posts)
-
-
 @public_bp.route('/insights')
 def insights():
+    """Insights/Blog Page"""
     page = request.args.get('page', 1, type=int)
+    posts = BlogPost.query.filter_by(is_published=True).order_by(
+        desc(BlogPost.published_at)
+    ).paginate(page=page, per_page=9)
     
-    # Combine Blog Posts + Newsletters
-    posts = BlogPost.query.filter_by(is_published=True).order_by(desc(BlogPost.published_at))
-    newsletters = Newsletter.query.filter_by(is_published=True).order_by(desc(Newsletter.published_at))
-    
-    # Union them (simple way)
-    all_items = list(posts.all()) + list(newsletters.all())
-    all_items.sort(key=lambda x: x.published_at or x.created_at, reverse=True)
-    
-    # Paginate manually or use simple pagination
-    per_page = 9
-    total = len(all_items)
-    start = (page - 1) * per_page
-    paginated_items = all_items[start:start + per_page]
-    
-    return render_template('public/insights.html', posts=paginated_items)  # Note: renamed to items in template if needed
+    return render_template('public/insights.html', posts=posts)
 
 
 @public_bp.route('/insights/<string:slug>', methods=['GET', 'POST'])
@@ -249,6 +228,24 @@ def blog_detail(slug):
                          form=form, 
                          comments=comments,
                          related_posts=related_posts)
+
+@public_bp.route('/newsletters')
+def newsletters():
+    """Dedicated Newsletter List Page"""
+    page = request.args.get('page', 1, type=int)
+    newsletters = Newsletter.query.filter_by(is_published=True)\
+                    .order_by(desc(Newsletter.published_at))\
+                    .paginate(page=page, per_page=9)
+    
+    return render_template('public/newsletters.html', newsletters=newsletters)
+
+
+@public_bp.route('/newsletter/<string:slug>')
+def newsletter_detail(slug):
+    """Single Newsletter Detail with PDF Viewer"""
+    newsletter = Newsletter.query.filter_by(slug=slug, is_published=True).first_or_404()
+    
+    return render_template('public/newsletter_detail.html', newsletter=newsletter)
 
 @public_bp.route('/comment/manage/<token>')
 def manage_comment(token):

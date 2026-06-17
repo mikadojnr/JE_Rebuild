@@ -83,12 +83,12 @@ def create_app():
 
     from models import SiteSettings
 
-    from forms import NewsletterForm
+    from forms import SubscribeNewsletterForm
 
     @app.context_processor
     def inject_newsletter_form():
         return {
-            'newsletter_form': NewsletterForm()
+            'newsletter_form': SubscribeNewsletterForm()
         }
 
     @app.context_processor
@@ -159,7 +159,13 @@ def init_default_data():
             address='40, 1st Crescent, Lugbe FHA, Abuja, Federal Capital Territory, Nigeria',
             logo_image_path='/static/images/logo.png',
             logo_dark_image_path='/static/images/logo-dark.png',
-            favicon_path='/static/images/favicon.ico'
+            favicon_path='/static/images/favicon.ico',
+            social_links={
+                'twitter': 'https://twitter.com/je_consultancy/',
+                'facebook': 'https://www.facebook.com/people/John-Eniola-Consultancy-Limited/61552669754142/',
+                'linkedin': 'https://www.linkedin.com/company/johneniolaltd?_l=en_US',
+                'instagram': 'https://www.instagram.com/je_consultancy/'
+            }
         )
         db.session.add(default_settings)
         db.session.commit()

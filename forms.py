@@ -25,18 +25,26 @@ class ContactForm(FlaskForm):
     message = TextAreaField('Your message', validators=[Optional(), Length(max=5000)])
     submit = SubmitField('Submit')
 
-    
 class NewsletterForm(FlaskForm):
-    title = StringField('Newsletter Title', validators=[DataRequired()])
-    subject = StringField('Email Subject', validators=[DataRequired()])
-    excerpt = TextAreaField('Short Description')
-    content = TextAreaField('Email Body Content (HTML)', validators=[DataRequired()])
-    google_drive_link = URLField('Google Drive Link')
-    pdf_url = URLField('Direct PDF Link (Optional)')
-    featured_image = FileField('Featured Image')
+    """Create / Edit Newsletter Content"""
+    title = StringField('Newsletter Title', validators=[DataRequired(), Length(max=255)])
+    slug = StringField('Slug', validators=[DataRequired(), Length(max=255)])
+    excerpt = TextAreaField('Excerpt')
+    content = TextAreaField('Email Body / Description', validators=[DataRequired()])
+    google_drive_link = URLField('Google Drive Link', validators=[DataRequired()])
+    pdf_url = URLField('Direct PDF URL (Optional)')
+    featured_image = FileField('Featured Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
     is_published = BooleanField('Publish on Website', default=True)
     submit = SubmitField('Save Newsletter')
 
+
+class NewsletterCampaignForm(FlaskForm):
+    """Form for Sending Newsletter"""
+    newsletter_id = SelectField('Select Newsletter', coerce=int, validators=[DataRequired()])
+    subject = StringField('Custom Email Subject', validators=[DataRequired(), Length(max=255)])
+    submit = SubmitField('Send to All Subscribers')
+
+    
 class SubscribeNewsletterForm(FlaskForm):
     """Newsletter Subscription Form"""
     email = StringField('Your email', validators=[DataRequired(), Email()])

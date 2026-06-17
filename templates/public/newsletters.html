@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Newsletters - John & Eniola Consultancy{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero-section.newsletters-page {
+    background-image: url('{{ url_for("static", filename="images/highlight.jpg") }}') !important;
+    background-size: cover;
+    background-position: center;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section newsletters-page">
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="breadcrumb mb-6"><a href="{{ url_for('public.home') }}">Home</a> / Newsletters</div>
+        <h1 class="text-5xl md:text-6xl font-bold mb-6">Our Newsletters</h1>
+        <p class="text-xl text-gray-200 max-w-2xl">Stay updated with our latest financial insights, tax strategies, and business advisory newsletters.</p>
+    </div>
+</section>
+
+<!-- Newsletters Grid -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for newsletter in newsletters.items %}
+            <a href="{{ url_for('public.newsletter_detail', slug=newsletter.slug) }}" class="group">
+                <div class="insight-card h-full flex flex-col rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl transition-all">
+                    {% if newsletter.featured_image %}
+                    <img src="{{ newsletter.featured_image }}" 
+                         alt="{{ newsletter.title }}" 
+                         class="w-full h-52 object-cover group-hover:scale-105 transition duration-500">
+                    {% endif %}
+                    
+                    <div class="p-6 flex-1 flex flex-col">
+                        <span class="inline-block px-3 py-1 text-xs font-semibold bg-blue-100 text-[#141495] rounded-full w-fit">NEWSLETTER</span>
+                        
+                        <h3 class="font-bold text-xl leading-tight mt-4 mb-3 group-hover:text-[#141495] transition line-clamp-2">
+                            {{ newsletter.title }}
+                        </h3>
+                        
+                        <p class="text-gray-600 text-sm flex-1 line-clamp-3">
+                            {{ newsletter.excerpt or newsletter.content[:150] }}...
+                        </p>
+                        
+                        <div class="mt-6 pt-6 border-t text-xs text-gray-500">
+                            {{ newsletter.published_at.strftime('%B %d, %Y') if newsletter.published_at else newsletter.created_at.strftime('%B %d, %Y') }}
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if newsletters.has_prev or newsletters.has_next %}
+        <div class="flex justify-center items-center gap-4 mt-12">
+            {% if newsletters.has_prev %}
+            <a href="{{ url_for('public.newsletters', page=newsletters.prev_num) }}" 
+               class="px-5 py-2 border border-[#141495] text-[#141495] rounded hover:bg-[#141495] hover:text-white transition">
+                ← Previous
+            </a>
+            {% endif %}
+            
+            {% if newsletters.has_next %}
+            <a href="{{ url_for('public.newsletters', page=newsletters.next_num) }}" 
+               class="px-5 py-2 border border-[#141495] text-[#141495] rounded hover:bg-[#141495] hover:text-white transition">
+                Next →
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

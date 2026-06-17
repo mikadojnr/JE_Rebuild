@@ -164,40 +164,39 @@ class Subscriber(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-# class Newsletter(db.Model):
-#     """Newsletter Campaigns"""
-#     __tablename__ = 'newsletters'
-    
-#     id = db.Column(db.Integer, primary_key=True)
-#     subject = db.Column(db.String(255), nullable=False)
-#     content = db.Column(db.Text, nullable=False)
-#     google_drive_link = db.Column(db.String(500))
-#     sent_count = db.Column(db.Integer, default=0)
-#     is_sent = db.Column(db.Boolean, default=False)
-#     sent_at = db.Column(db.DateTime)
-#     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-#     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
 class Newsletter(db.Model):
-    """Newsletter Campaigns"""
+    """Newsletter Content / Template (PDF + Details)"""
     __tablename__ = 'newsletters'
     
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
-    slug = db.Column(db.String(255), unique=True, nullable=False, index=True)   # ← NEW
-    subject = db.Column(db.String(255), nullable=False)
+    slug = db.Column(db.String(255), unique=True, nullable=False, index=True)
     excerpt = db.Column(db.String(500))
-    content = db.Column(db.Text, nullable=False)          # Email body
+    content = db.Column(db.Text, nullable=False)          # Email body / description
     google_drive_link = db.Column(db.String(500))
     pdf_url = db.Column(db.String(500))
     featured_image = db.Column(db.String(255))
     is_published = db.Column(db.Boolean, default=False)
     published_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationship to campaigns
+    campaigns = db.relationship('NewsletterCampaign', backref='newsletter', lazy=True)
+
+
+class NewsletterCampaign(db.Model):
+    """Tracks each time a newsletter is sent"""
+    __tablename__ = 'newsletter_campaigns'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    newsletter_id = db.Column(db.Integer, db.ForeignKey('newsletters.id'), nullable=False)
+    
+    subject = db.Column(db.String(255), nullable=False)
     sent_count = db.Column(db.Integer, default=0)
     is_sent = db.Column(db.Boolean, default=False)
     sent_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     @property
     def post_type(self):

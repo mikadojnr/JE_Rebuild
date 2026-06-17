@@ -1,0 +1,32 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Sent Newsletters{% endblock %}
+
+{% block content %}
+<h2 class="text-3xl font-bold mb-8">Sent Campaigns</h2>
+
+{% if campaigns %}
+<table class="w-full bg-white rounded-xl shadow">
+    <thead class="bg-gray-50">
+        <tr>
+            <th class="px-6 py-4 text-left">Newsletter</th>
+            <th class="px-6 py-4 text-left">Subject</th>
+            <th class="px-6 py-4 text-left">Sent Count</th>
+            <th class="px-6 py-4 text-left">Date</th>
+        </tr>
+    </thead>
+    <tbody class="divide-y">
+        {% for camp in campaigns %}
+        <tr>
+            <td class="px-6 py-5">{{ camp.newsletter.title }}</td>
+            <td class="px-6 py-5">{{ camp.subject }}</td>
+            <td class="px-6 py-5 font-medium">{{ camp.sent_count }}</td>
+            <td class="px-6 py-5">{{ camp.sent_at.strftime('%b %d, %Y %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="text-gray-500">No campaigns sent yet.</p>
+{% endif %}
+{% endblock %}

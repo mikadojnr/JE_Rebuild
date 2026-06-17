@@ -14,7 +14,7 @@ import os
 from datetime import datetime
 
 from models import (
-    User, BlogPost, Service, TeamMember, Testimonial, 
+    NewsletterCampaign, User, BlogPost, Service, TeamMember, Testimonial, 
     Subscriber, Newsletter, Comment, SiteSettings, Media
 )
 from forms import (
@@ -681,7 +681,6 @@ def site_settings():
     
     return render_template('admin/settings.html', form=form, settings=settings)
 
-
 # ============ NEWSLETTER MANAGEMENT ============
 
 @admin_bp.route('/newsletter')
@@ -695,15 +694,12 @@ def newsletter_list():
 @admin_required
 def newsletter_create():
     form = NewsletterForm()
-
     if form.validate_on_submit():
-        featured_image_path = None
-        if form.featured_image.data:
-            featured_image_path = save_upload_file(form.featured_image.data)
+        featured_image_path = save_upload_file(form.featured_image.data) if form.featured_image.data else None
 
         newsletter = Newsletter(
             title=form.title.data,
-            subject=form.subject.data,
+            slug=form.slug.data,
             excerpt=form.excerpt.data,
             content=form.content.data,
             google_drive_link=form.google_drive_link.data,
@@ -712,11 +708,10 @@ def newsletter_create():
             is_published=form.is_published.data,
             published_at=datetime.utcnow() if form.is_published.data else None
         )
-
         db.session.add(newsletter)
         db.session.commit()
 
-        flash('Newsletter created successfully!', 'success')
+        flash('Newsletter saved successfully!', 'success')
         return redirect(url_for('admin.newsletter_list'))
 
     return render_template('admin/newsletter/form.html', form=form, action='Create')
@@ -730,11 +725,10 @@ def newsletter_edit(nl_id):
 
     if form.validate_on_submit():
         if form.featured_image.data:
-            featured_image_path = save_upload_file(form.featured_image.data)
-            newsletter.featured_image = featured_image_path
+            newsletter.featured_image = save_upload_file(form.featured_image.data)
 
         newsletter.title = form.title.data
-        newsletter.subject = form.subject.data
+        newsletter.slug = form.slug.data
         newsletter.excerpt = form.excerpt.data
         newsletter.content = form.content.data
         newsletter.google_drive_link = form.google_drive_link.data
@@ -748,9 +742,9 @@ def newsletter_edit(nl_id):
         flash('Newsletter updated!', 'success')
         return redirect(url_for('admin.newsletter_list'))
 
-    # Pre-fill form
+    # Pre-fill
     form.title.data = newsletter.title
-    form.subject.data = newsletter.subject
+    form.slug.data = newsletter.slug
     form.excerpt.data = newsletter.excerpt
     form.content.data = newsletter.content
     form.google_drive_link.data = newsletter.google_drive_link
@@ -763,145 +757,56 @@ def newsletter_edit(nl_id):
 @admin_bp.route('/newsletter/<int:nl_id>/delete', methods=['POST'])
 @admin_required
 def newsletter_delete(nl_id):
-    newsletter = Newsletter.query.get_or_404(nl_id)
-    db.session.delete(newsletter)
+    nl = Newsletter.query.get_or_404(nl_id)
+    db.session.delete(nl)
     db.session.commit()
     flash('Newsletter deleted.', 'success')
     return redirect(url_for('admin.newsletter_list'))
 
 
-@admin_bp.route('/newsletter/<int:nl_id>/send', methods=['POST'])
+# ============ SEND NEWSLETTER ============
+
+@admin_bp.route('/newsletter/send', methods=['GET', 'POST'])
 @admin_required
-def newsletter_send(nl_id):
-    newsletter = Newsletter.query.get_or_404(nl_id)
-    subscribers = Subscriber.query.filter_by(is_active=True).all()
+def newsletter_send():
+    form = NewsletterCampaignForm()
+    form.newsletter_id.choices = [(n.id, n.title) for n in Newsletter.query.order_by(Newsletter.title).all()]
 
-    if not subscribers:
-        flash('No active subscribers.', 'warning')
-        return redirect(url_for('admin.newsletter_list'))
+    if form.validate_on_submit():
+        newsletter = Newsletter.query.get_or_404(form.newsletter_id.data)
+        subscribers = Subscriber.query.filter_by(is_active=True).all()
 
-    success_count = 0
-    for sub in subscribers:
-        if send_newsletter_email(newsletter.subject, newsletter.content, sub.email):
-            success_count += 1
+        if not subscribers:
+            flash('No active subscribers found.', 'warning')
+            return redirect(url_for('admin.newsletter_send'))
 
-    newsletter.sent_count = success_count
-    newsletter.is_sent = True
-    newsletter.sent_at = datetime.utcnow()
-    db.session.commit()
+        success_count = 0
+        for sub in subscribers:
+            if send_newsletter_email(form.subject.data, newsletter.content, sub.email):
+                success_count += 1
 
-    flash(f'Sent to {success_count} subscribers!', 'success')
-    return redirect(url_for('admin.newsletter_list'))
+        # Record the campaign
+        campaign = NewsletterCampaign(
+            newsletter_id=newsletter.id,
+            subject=form.subject.data,
+            sent_count=success_count,
+            is_sent=True,
+            sent_at=datetime.utcnow()
+        )
+        db.session.add(campaign)
+        db.session.commit()
 
-# @admin_bp.route('/newsletter')
-# # @admin_required
-# def newsletter_list():
-#     """List all newsletters"""
-#     newsletters = Newsletter.query.order_by(Newsletter.created_at.desc()).all()
-#     return render_template('admin/newsletter/list.html', newsletters=newsletters)
+        flash(f'Newsletter sent successfully to {success_count} subscribers!', 'success')
+        return redirect(url_for('admin.newsletter_sent'))
 
-# @admin_bp.route('/newsletter/create', methods=['GET', 'POST'])
-# def newsletter_create():
-#     form = NewsletterCampaignForm()
+    return render_template('admin/newsletter/send.html', form=form)
 
-#     if form.validate_on_submit():
-#         subscribers = Subscriber.query.filter_by(is_active=True).all()
 
-#         if not subscribers:
-#             flash('No active subscribers.', 'warning')
-#             return render_template('admin/newsletter/form.html', form=form, action='Create')
-
-#         # Create newsletter record
-#         newsletter = Newsletter(
-#             subject=form.subject.data,
-#             content=form.content.data,
-#             google_drive_link=form.google_drive_link.data,
-#             is_sent=True,
-#             sent_at=datetime.utcnow(),
-#             sent_count=len(subscribers)
-#         )
-
-#         db.session.add(newsletter)
-#         db.session.commit()
-
-#         # === Send emails synchronously ===
-#         success_count = 0
-#         failed_emails = []
-
-        # from flask_mail import Message
-        # from extensions import mail
-
-        # for sub in subscribers:
-        #     try:
-        #         msg = Message(
-        #             subject=form.subject.data,
-        #             recipients=[sub.email],
-        #             html=form.content.data,
-        #             sender=app.config.get('MAIL_DEFAULT_SENDER')
-        #         )
-        #         mail.send(msg)
-        #         success_count += 1
-        #         print(f"✅ Email sent to {sub.email}")
-                
-        #     except Exception as e:
-        #         failed_emails.append(sub.email)
-        #         print(f"❌ Failed to send to {sub.email}: {e}")
-
-    #     for sub in subscribers:
-    #         if send_newsletter_email(form.subject.data, form.content.data, sub.email):
-    #             success_count += 1
-    #         else:
-    #             failed_emails.append(sub.email)
-
-    #     # Update sent count with actual success
-    #     if success_count != len(subscribers):
-    #         newsletter.sent_count = success_count
-    #         db.session.commit()
-
-    #     if success_count > 0:
-    #         flash(f'Newsletter sent successfully to {success_count} subscribers!', 'success')
-    #     if failed_emails:
-    #         flash(f'Failed to send to {len(failed_emails)} emails.', 'danger')
-
-    #     return redirect(url_for('admin.newsletter_list'))
-
-    # return render_template('admin/newsletter/form.html', form=form, action='Create')
-
-# @admin_bp.route('/newsletter/create', methods=['GET', 'POST'])
-# def newsletter_create():
-#     form = NewsletterCampaignForm()
-
-#     if form.validate_on_submit():
-#         subscribers = Subscriber.query.filter_by(is_active=True).all()
-
-#         if not subscribers:
-#             flash('No active subscribers.', 'warning')
-#             return render_template('admin/newsletter/form.html', form=form)
-
-#         # Save newsletter first
-#         newsletter = Newsletter(
-#             subject=form.subject.data,
-#             content=form.content.data,
-#             google_drive_link=form.google_drive_link.data,
-#             is_sent=True,
-#             sent_at=datetime.utcnow(),
-#             sent_count=len(subscribers)
-#         )
-#         db.session.add(newsletter)
-#         db.session.commit()
-
-#         # Queue emails asynchronously
-#         for sub in subscribers:
-#             send_email_task.delay(
-#                 form.subject.data,
-#                 sub.email,
-#                 form.content.data
-#             )
-
-#         flash(f'Newsletter successfully queued for {len(subscribers)} subscribers!', 'success')
-#         return redirect(url_for('admin.newsletter_list'))
-
-#     return render_template('admin/newsletter/form.html', form=form, action='Create')
+@admin_bp.route('/newsletter/sent')
+@admin_required
+def newsletter_sent():
+    campaigns = NewsletterCampaign.query.order_by(NewsletterCampaign.sent_at.desc()).all()
+    return render_template('admin/newsletter/sent.html', campaigns=campaigns)
 
 @admin_bp.route('/subscribers')
 # @admin_required

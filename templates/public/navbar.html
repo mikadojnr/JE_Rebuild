@@ -69,6 +69,12 @@
                     Insights
                 </a>
 
+                <a href="{{ url_for('public.newsletters') }}" 
+                   class="text-gray-700 text-sm font-medium border-b-2 border-transparent pb-1 transition-all duration-300 ease-in-out hover:text-[#1E40AF] hover:border-[#1E40AF]
+                   {{ 'text-[#0800f0]' if request.endpoint == 'public.newsletters' or request.endpoint == 'public.newsletter_detail' else ''}}">
+                    Newsletters
+                </a>
+
                 <a href="{{ url_for('public.contact') }}" 
                    class="text-gray-700 text-sm font-medium border-b-2 border-transparent pb-1 transition-all duration-300 ease-in-out hover:text-[#1E40AF] hover:border-[#1E40AF]
                    {{ 'text-[#0800f0]' if request.endpoint == 'public.contact' else ''}}">
@@ -139,6 +145,12 @@
                    class="block px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-300 ease-in-out hover:text-[#1E40AF] hover:border-[#1E40AF]
                    {{ 'text-[#0800f0]' if request.endpoint == 'public.insights' or request.endpoint == 'public.blog_detail' else ''}}">
                     Insights
+                </a>
+
+                <a href="{{ url_for('public.newsletters') }}"
+                   class="block px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-300 ease-in-out hover:text-[#1E40AF] hover:border-[#1E40AF]
+                   {{ 'text-[#0800f0]' if request.endpoint == 'public.newsletters' or request.endpoint == 'public.newsletter_detail' else ''}}">
+                    Newsletters
                 </a>
 
                 <a href="{{ url_for('public.contact') }}"
