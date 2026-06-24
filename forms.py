@@ -221,14 +221,17 @@ class ResetPasswordForm(FlaskForm):
 
 
 class TestimonialLinkForm(FlaskForm):
+    """Admin generates link"""
     client_name = StringField('Client Name', validators=[DataRequired()])
     client_company = StringField('Company Name')
     email = StringField('Client Email', validators=[DataRequired(), Email()])
-    expires_in_days = IntegerField('Link Valid For (Days)', default=7, validators=[NumberRange(min=1, max=30)])
-    submit = SubmitField('Generate Submission Link')
+    expires_in_days = IntegerField('Valid For (Days)', default=7, validators=[NumberRange(1, 30)])
+    submit = SubmitField('Generate & Send Link')
 
 
 class PublicTestimonialForm(FlaskForm):
-    content = TextAreaField('Your Testimonial', validators=[DataRequired(), Length(min=20, max=2000)])
-    rating = IntegerField('Rating (1-5)', validators=[DataRequired(), NumberRange(min=1, max=5)])
+    """Client submission form"""
+    client_role = StringField('Your Role / Position', validators=[DataRequired()])
+    content = TextAreaField('Your Testimonial', validators=[DataRequired(), Length(min=30, max=2000)])
+    rating = IntegerField('Rating (1-5 Stars)', validators=[DataRequired(), NumberRange(1, 5)])
     submit = SubmitField('Submit Testimonial')

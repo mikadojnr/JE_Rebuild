@@ -1,24 +1,83 @@
 {% extends "admin/base.html" %}
-{% block page_title %}Testimonials{% endblock %}
+
+{% block page_title %}Manage Testimonials{% endblock %}
+
 {% block content %}
 <div class="flex justify-end items-center mb-8">
-    <a href="{{ url_for('admin.testimonial_create') }}" class="bg-[#141495] text-white px-6 py-3 rounded">➕ Add Testimonial</a>
+    <a href="{{ url_for('admin.generate_testimonial_link') }}" 
+       class="bg-[#141495] text-white px-6 py-3 rounded-lg hover:bg-[#0f0f7a] transition flex items-center gap-2">
+        <i class="fa fa-link"></i> Generate Link
+    </a>
 </div>
+
 {% if testimonials %}
-<div class="space-y-4">
-    {% for test in testimonials %}
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex justify-between items-start mb-3">
-            <div><p class="font-bold">{{ test.client_name }}</p><p class="text-sm text-gray-600">{{ test.client_role or 'Client' }}</p></div>
-            <div class="flex gap-1">{% for i in range(test.rating) %}<span class="text-[#ff6b35]">★</span>{% endfor %}</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    {% for t in testimonials %}
+    <div class="bg-white rounded-2xl shadow p-6">
+        <div class="flex justify-between">
+            <div>
+                <h4 class="font-bold">{{ t.client_name }}</h4>
+                <p class="text-sm text-gray-600">{{ t.client_role }} • {{ t.client_company or 'Client' }}</p>
+            </div>
+            <div class="flex text-[#ff6b35]">
+                {% for i in range(t.rating) %}
+                    <span class="text-yellow-400">★</span>
+                {% endfor %}
+
+                {% for i in range(5 - t.rating) %}
+                    <span class="text-gray-300">★</span>
+                {% endfor %}
+            </div>
         </div>
-        <p class="text-gray-700 mb-4">{{ test.content[:150] }}...</p>
-        <div class="flex gap-2">
-            <a href="{{ url_for('admin.testimonial_edit', testimonial_id=test.id) }}" class="px-3 py-1 bg-blue-500 text-white rounded text-sm"><i class="fa fa-edit"></i></a>
-            <button onclick="deleteViaAjax('{{ url_for('admin.testimonial_delete', testimonial_id=test.id) }}')" class="px-3 py-1 bg-red-500 text-white rounded text-sm"><i class="fa fa-trash"></i></button>
+        
+        <p class="italic text-gray-700 my-6">"{{ t.content }}"</p>
+        
+        <div class="flex justify-between items-center">
+            <span class="px-4 py-1.5 text-xs font-medium rounded-full
+                {% if t.is_active %}bg-green-100 text-green-700{% else %}bg-amber-100 text-amber-700{% endif %}">
+                {% if t.is_active %}Approved{% else %}Pending Approval{% endif %}
+            </span>
+            
+            <div class="flex gap-2">
+                {% if not t.is_active %}
+                <button onclick="approveTestimonial({{ t.id }})" 
+                        class="px-5 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 text-sm">
+                    <i class="fa fa-check"></i> 
+                </button>
+                {% endif %}
+                
+                <a href="{{ url_for('admin.testimonial_edit', testimonial_id=t.id) }}" 
+                   class="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm">
+                   <i class="fa fa-edit"></i> 
+                </a>
+                
+                <button onclick="deleteViaAjax('{{ url_for('admin.testimonial_delete', testimonial_id=t.id) }}', this.closest('.bg-white'))" 
+                        class="px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
         </div>
     </div>
     {% endfor %}
 </div>
-{% else %}<p class="text-gray-500">No testimonials yet</p>{% endif %}
+{% else %}
+<div class="bg-white rounded-2xl shadow p-16 text-center">
+    <p class="text-gray-500">No testimonials yet.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function approveTestimonial(id) {
+    if (confirm("Approve this testimonial for public display?")) {
+        fetch(`/admin/testimonials/${id}/approve`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            alert(data.message || "Approved!");
+            location.reload();
+        });
+    }
+}
+</script>
 {% endblock %}

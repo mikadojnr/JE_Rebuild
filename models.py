@@ -127,37 +127,41 @@ class Comment(db.Model):
 )
 
    
-class Testimonial(db.Model):
-    """Client Testimonials"""
-    __tablename__ = 'testimonials'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    client_name = db.Column(db.String(255), nullable=False)
-    client_role = db.Column(db.String(255))
-    client_image = db.Column(db.String(255))
-    content = db.Column(db.Text, nullable=False)
-    rating = db.Column(db.Integer, default=5)  # 1-5 stars
-    order = db.Column(db.Integer, default=0)
-    is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
 class TestimonialSubmission(db.Model):
-    """Time-limited testimonial submission links"""
+    """Temporary link for clients to submit testimonials"""
     __tablename__ = 'testimonial_submissions'
     
     id = db.Column(db.Integer, primary_key=True)
     token = db.Column(db.String(100), unique=True, nullable=False, index=True)
     client_name = db.Column(db.String(255), nullable=False)
-    client_company = db.Column(db.String(255))
+    client_company = db.Column(db.String(255))           # Filled by Admin
     email = db.Column(db.String(120), nullable=False)
     expires_at = db.Column(db.DateTime, nullable=False)
     is_used = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
-    # Relationship to final approved testimonial
+
+    # Link to final testimonial after submission
     testimonial_id = db.Column(db.Integer, db.ForeignKey('testimonials.id'), nullable=True)
-    testimonial = db.relationship('Testimonial', backref='submission', uselist=False)
+
+
+class Testimonial(db.Model):
+    """Approved Testimonials shown on website"""
+    __tablename__ = 'testimonials'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    client_name = db.Column(db.String(255), nullable=False)
+    client_role = db.Column(db.String(255))              # Filled by Client
+    client_company = db.Column(db.String(255))           # Filled by Admin
+    client_image = db.Column(db.String(255))
+    content = db.Column(db.Text, nullable=False)
+    rating = db.Column(db.Integer, default=5)
+    order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=False)     # Must be approved
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Link back to submission
+    submission = db.relationship('TestimonialSubmission', backref='testimonial', uselist=False)
 
 class TeamMember(db.Model):
     """Team Members"""

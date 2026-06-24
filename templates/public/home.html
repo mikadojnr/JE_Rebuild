@@ -125,6 +125,24 @@
         color: #64748b;
         line-height: 1.6;
     }
+
+    .marquee {
+    width: max-content;
+    animation: marquee 15s linear infinite;
+    }
+
+    @keyframes marquee {
+        from {
+            transform: translateX(0);
+        }
+        to {
+            transform: translateX(-50%);
+        }
+    }
+
+    .marquee:hover {
+        animation-play-state: paused;
+    }
 </style>
 {% endblock %}
 
@@ -234,22 +252,36 @@
 
 <!-- Trusted Companies -->
 <section class="py-20 bg-gray-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <h2 class="mb-10 text-[#141495] text-3xl sm:text-4xl md:text-5xl font-bold leading-snug text-center">Trusted by Leading Organizations</h2>
-        <div class="flex flex-wrap justify-center items-center gap-12">
-            <div class="h-16 px-8 flex items-center opacity-100 hover:opacity-60 transition">
-                <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg"><i class="fa-solid fa-lock"></i> LOCKED</span>
+        <div class="overflow-hidden w-full">
+            <div class="marquee flex items-center gap-12 whitespace-nowrap">
+                <!-- First set -->
+                <div class="h-16 px-8 flex items-center">
+                    <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg">
+                        <i class="fa-solid fa-lock"></i> LOCKED
+                    </span>
+                </div>
+
+                <div class="h-16 px-8 flex items-center">
+                    <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg">
+                        <i class="fa-solid fa-lock"></i> LOCKED
+                    </span>
+                </div>
+
+                <div class="h-16 px-8 flex items-center">
+                    <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg">
+                        <i class="fa-solid fa-lock"></i> LOCKED
+                    </span>
+                </div>
+
+                <div class="h-16 px-8 flex items-center">
+                    <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg">
+                        <i class="fa-solid fa-lock"></i> LOCKED
+                    </span>
+                </div>
+
             </div>
-            <div class="h-16 px-8 flex items-center opacity-100 hover:opacity-60 transition">
-                <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg"><i class="fa-solid fa-lock"></i> LOCKED</span>
-            </div>
-            <div class="h-16 px-8 flex items-center opacity-100 hover:opacity-60 transition">
-                <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg"><i class="fa-solid fa-lock"></i> LOCKED</span>
-            </div>
-            <div class="h-16 px-8 flex items-center opacity-100 hover:opacity-60 transition">
-                <span class="font-bold text-gray-100 section-bg py-3 px-4 rounded-lg"><i class="fa-solid fa-lock"></i> LOCKED</span>
-            </div>
-           
         </div>
     </div>
 </section>
@@ -423,9 +455,7 @@ document.addEventListener("DOMContentLoaded", () => {
             {% for testimonial in testimonials %}
             <div class="card">
                 <div class="flex gap-1 mb-4">
-                    {% for i in range(testimonial.rating) %}
-                    <span class="text-[#0800f0]">★</span>
-                    {% endfor %}
+                    
                 </div>
                 <p class="text-gray-700 mb-6 italic">{{ testimonial.content }}</p>
                 <div class="flex items-center gap-4 border-t pt-4">
@@ -439,6 +469,13 @@ document.addEventListener("DOMContentLoaded", () => {
                         {% if testimonial.client_role %}
                         <p class="text-xs text-gray-600">{{ testimonial.client_role }}</p>
                         {% endif %}
+                        {% for i in range(testimonial.rating) %}
+                        <span class="text-yellow-400">★</span>
+                        {% endfor %}
+
+                        {% for i in range(5 - testimonial.rating) %}
+                            <span class="text-gray-300">★</span>
+                        {% endfor %}
                     </div>
                 </div>
             </div>

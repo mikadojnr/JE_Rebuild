@@ -498,44 +498,29 @@ def reset_password(token):
 @public_bp.route('/submit-testimonial/<token>', methods=['GET', 'POST'])
 def submit_testimonial(token):
     submission = TestimonialSubmission.query.filter_by(token=token).first_or_404()
-    
+
     if submission.is_used or submission.expires_at < datetime.utcnow():
         return render_template('public/testimonial_expired.html')
-    
+
     form = PublicTestimonialForm()
-    
+
     if form.validate_on_submit():
         testimonial = Testimonial(
             client_name=submission.client_name,
-            client_role=submission.client_company or "Client",
+            client_role=form.client_role.data,
+            client_company=submission.client_company,
             content=form.content.data,
             rating=form.rating.data,
             is_active=False  # Requires admin approval
         )
         db.session.add(testimonial)
         db.session.commit()
-        
-        # Link submission to testimonial
+
         submission.testimonial_id = testimonial.id
         submission.is_used = True
         db.session.commit()
-        
-        flash('Thank you! Your testimonial has been submitted and is under review.', 'success')
+
+        flash('Thank you! Your testimonial has been received and is under review.', 'success')
         return redirect(url_for('public.home'))
-    
-    return render_template('public/submit_testimonial.html', 
-                         form=form, 
-                         submission=submission)
 
-
-@public_bp.errorhandler(404)
-def page_not_found(error):
-    """Handle 404 errors"""
-    return render_template('public/404.html'), 404
-
-
-@public_bp.errorhandler(500)
-def internal_error(error):
-    """Handle 500 errors"""
-    db.session.rollback()
-    return render_template('public/500.html'), 500
+    return render_template('public/submit_testimonial.html', form=form, submission=submission)

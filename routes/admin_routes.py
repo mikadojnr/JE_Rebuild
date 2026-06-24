@@ -568,24 +568,24 @@ def testimonial_edit(testimonial_id):
     return render_template('admin/testimonials/form.html', form=form, action='Edit', testimonial=testimonial)
 
 
-@admin_bp.route('/testimonials/<int:testimonial_id>/delete', methods=['POST'])
-@admin_required
-def testimonial_delete(testimonial_id):
-    """Delete testimonial"""
-    testimonial = Testimonial.query.get_or_404(testimonial_id)
+# @admin_bp.route('/testimonials/<int:testimonial_id>/delete', methods=['POST'])
+# @admin_required
+# def testimonial_delete(testimonial_id):
+#     """Delete testimonial"""
+#     testimonial = Testimonial.query.get_or_404(testimonial_id)
     
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        try:
-            db.session.delete(testimonial)
-            db.session.commit()
-            return jsonify({'success': True, 'message': 'Testimonial deleted.'}), 200
-        except Exception as e:
-            return jsonify({'success': False, 'message': str(e)}), 400
+#     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+#         try:
+#             db.session.delete(testimonial)
+#             db.session.commit()
+#             return jsonify({'success': True, 'message': 'Testimonial deleted.'}), 200
+#         except Exception as e:
+#             return jsonify({'success': False, 'message': str(e)}), 400
     
-    db.session.delete(testimonial)
-    db.session.commit()
-    flash('Testimonial deleted successfully!', 'success')
-    return redirect(url_for('admin.testimonials_list'))
+#     db.session.delete(testimonial)
+#     db.session.commit()
+#     flash('Testimonial deleted successfully!', 'success')
+#     return redirect(url_for('admin.testimonials_list'))
 
 
 # ============ COMMENTS MANAGEMENT ============
@@ -1163,23 +1163,17 @@ def admin_delete(user_id):
 @admin_required
 def testimonial_links():
     submissions = TestimonialSubmission.query.order_by(TestimonialSubmission.created_at.desc()).all()
-    now = datetime.now()
-    for submission in submissions:
-        if submission.expires_at and submission.expires_at < now:
-            submission.is_expired = True
-        else:
-            submission.is_expired = False
-    return render_template('admin/testimonials/links.html', submissions=submissions, now=now)
+    return render_template('admin/testimonials/links.html', submissions=submissions)
+
 
 @admin_bp.route('/testimonials/generate-link', methods=['GET', 'POST'])
 @admin_required
 def generate_testimonial_link():
     form = TestimonialLinkForm()
-    
     if form.validate_on_submit():
         token = secrets.token_urlsafe(32)
         expires_at = datetime.utcnow() + timedelta(days=form.expires_in_days.data)
-        
+
         submission = TestimonialSubmission(
             token=token,
             client_name=form.client_name.data,
@@ -1191,15 +1185,11 @@ def generate_testimonial_link():
         db.session.commit()
 
         submission_url = url_for('public.submit_testimonial', token=token, _external=True)
-        
-        # Pass calculated days remaining
-        days_remaining = form.expires_in_days.data
-        
-        send_testimonial_invite_email(submission, submission_url, days_remaining)
-        
-        flash('Testimonial link generated and sent successfully!', 'success')
+        send_testimonial_invite_email(submission, submission_url)
+
+        flash('Testimonial link generated and sent!', 'success')
         return redirect(url_for('admin.testimonial_links'))
-    
+
     return render_template('admin/testimonials/generate_link.html', form=form)
 
 
@@ -1224,6 +1214,32 @@ def resend_testimonial_link(sub_id):
         'success': True, 
         'message': 'Testimonial link has been resent successfully!'
     })
+
+@admin_bp.route('/testimonials/<int:testimonial_id>/approve', methods=['POST'])
+@admin_required
+def testimonial_approve(testimonial_id):
+    testimonial = Testimonial.query.get_or_404(testimonial_id)
+    testimonial.is_active = True
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'message': 'Testimonial approved and published on the website.'
+    })
+
+
+@admin_bp.route('/testimonials/<int:testimonial_id>/delete', methods=['POST'])
+@admin_required
+def testimonial_delete(testimonial_id):
+    testimonial = Testimonial.query.get_or_404(testimonial_id)
+    db.session.delete(testimonial)
+    db.session.commit()
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': True, 'message': 'Testimonial deleted.'})
+    
+    flash('Testimonial deleted successfully.', 'success')
+    return redirect(url_for('admin.testimonials_list'))
 
 @admin_bp.route('/testimonials/links/<int:sub_id>/delete', methods=['POST'])
 @admin_required
