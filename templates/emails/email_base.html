@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}John & Eniola Consultancy{% endblock %}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f9fafb;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        .header {
+            background: #141495;
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+        }
+        .content {
+            padding: 40px;
+            line-height: 1.7;
+        }
+        .footer {
+            text-align: center;
+            padding: 25px;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 0.9em;
+        }
+        .button {
+            display: inline-block;
+            background: #141495;
+            color: white;
+            padding: 14px 32px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>John & Eniola Consultancy</h2>
+        </div>
+        
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+        
+        <div class="footer">
+            <p>John & Eniola Consultancy © {{ current_year }} | All Rights Reserved</p>
+            <p style="margin-top: 10px;">
+                <a href="{{ url_for('public.home', _external=True) }}" style="color: #64748b; text-decoration: underline;">Visit Our Website</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

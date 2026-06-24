@@ -75,4 +75,35 @@
         {% endif %}
     </div>
 </section>
+
+<!-- Newsletter CTA -->
+<section class="cta-section">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="mb-9 text-[#ffffff] text-3xl sm:text-4xl md:text-5xl font-bold leading-snug text-center">Stay Updated</h2>
+        <p class="text-xl text-gray-200 mb-10">Subscribe to our newsletter for the latest financial insights and updates.</p>
+        
+        <form id="newsletter-form" class="max-w-md mx-auto">
+
+            {{ newsletter_form.hidden_tag() }}
+
+            <div class="flex flex-col sm:flex-row gap-3">
+
+                {{ newsletter_form.email(
+                    class="flex-grow px-6 py-3 rounded-full bg-white text-[#141495] border-none",
+                    placeholder="Your email"
+                ) }}
+
+                <button type="submit" class="btn-primary px-8 border-1">
+                    Subscribe
+                </button>
+
+            </div>
+
+            <p class="text-sm text-gray-300 mt-3">
+                We respect your privacy. Unsubscribe at any time.
+            </p>
+
+        </form>
+    </div>
+</section>
 {% endblock %}

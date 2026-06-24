@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Unsubscribe - John & Eniola Consultancy{% endblock %}
+
+{% block content %}
+<section class="py-20 bg-white">
+    <div class="max-w-lg mx-auto px-4 text-center">
+        {% if success %}
+            <div class="mb-8 text-6xl text-green-500">
+                <i class="fa-solid fa-circle-check fa-2x"></i>
+            </div>
+            <h2 class="text-3xl font-bold mb-4 text-[#141495]">Successfully Unsubscribed</h2>
+            <p class="text-lg text-gray-600 mb-8">
+                You have been unsubscribed from our newsletter.<br>
+                Email: <strong>{{ email }}</strong>
+            </p>
+            <a href="{{ url_for('public.home') }}" class="btn-primary px-8 py-4 text-lg hover:text-[#141495] hover:bg-white hover:border-[#141495] transition duration-300">
+                <i class="fa fa-home
+               <i class="fa fa-home"></i> Go to Homepage
+            </a>
+        {% else %}
+            <div class="mb-8 text-6xl text-yellow-500">
+                <i class="fa-solid fa-triangle-exclamation fa-2x"></i>
+            </div>
+            <h2 class="text-3xl font-bold mb-6 text-[#141495]">Unsubscribe Link Not Valid</h2>
+            <p class="text-gray-600">
+                We couldn’t find a matching subscription for this request.  
+                Please make sure you’re using the unsubscribe link sent to your email.
+            </p>
+            <p class="text-gray-600 mt-3">
+                If you continue having issues, you can contact support for assistance.
+            </p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

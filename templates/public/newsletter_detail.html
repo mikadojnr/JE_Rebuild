@@ -32,17 +32,7 @@
 
 <!-- Content -->
 <section class="py-20 bg-white">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6">
-        {% if newsletter.featured_image %}
-        <img src="{{ newsletter.featured_image }}" 
-             alt="{{ newsletter.title }}" 
-             class="w-full rounded-2xl mb-12 h-96 object-cover shadow-lg">
-        {% endif %}
-
-        <div class="prose max-w-none mb-16">
-            {{ newsletter.content | safe }}
-        </div>
-
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- PDF Embed Section -->
         <div class="bg-gray-900 rounded-3xl overflow-hidden shadow-2xl mb-12">
             <div class="bg-gray-800 px-6 py-4 text-white flex items-center justify-between">
@@ -69,8 +59,8 @@
         <div class="text-center">
             <a href="{{ newsletter.pdf_url or newsletter.google_drive_link }}" 
                target="_blank"
-               class="inline-flex items-center gap-3 bg-[#141495] hover:bg-[#0f0f7a] text-white px-10 py-5 rounded-2xl text-lg font-medium transition">
-                📥 Download Full PDF Version
+               class="btn-primary hover:text-[#0f0f7a]">
+                <i class="fa fa-download"></i> Download Full PDF
             </a>
         </div>
     </div>

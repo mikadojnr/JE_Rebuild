@@ -132,68 +132,53 @@
 {% block content %}
 
 <!-- HERO SECTION -->
-<section class="hero ">
+<section class="hero relative h-screen overflow-hidden">
     <!-- Carousel -->
-    <div class="carousel-container" id="heroCarousel">
-        <div class="carousel-slide active">
-            <img src="https://johneniolaltd.com/wp-content/uploads/2026/01/reception-1-1920x1080.jpg" alt="Financial Excellence">
+    <div class="carousel-container absolute inset-0" id="heroCarousel">
+        {% for slide in hero_slides %}
+        <div class="carousel-slide absolute inset-0 transition-opacity duration-1000 {% if loop.first %}active{% endif %}" 
+             style="background-image: url('{{ slide.image_path|replace('\\', '/') }}'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-black/10"></div>
         </div>
-        <div class="carousel-slide">
-            <img src="https://johneniolaltd.com/wp-content/uploads/2026/01/je_conference_room-1920x1080.jpg" alt="Tax Strategy">
-        </div>
-        <div class="carousel-slide">
-            <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1920&q=80" alt="Business Advisory">
-        </div>
+        {% endfor %}
     </div>
 
     <!-- Content -->
-    <div class="container mx-auto px-6 relative z-10 pt-3 max-w-7xl mx-auto">
-        <div class="max-w-6xl mx-auto">
-            <!-- Glass Cards -->
+    <div class="container mx-auto px-6 relative z-10 h-full flex items-center pt-20">
+        <div class="max-w-4xl">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                <div class="glass-card rounded-2xl p-6 text-white">
+                <div class="glass-card rounded-2xl p-6 text-white backdrop-blur-md">
                     <h3 class="text-sm font-semibold mb-1">Fiscal Incentive</h3>
                     <p class="text-xs opacity-90">Maximize your tax benefits</p>
                 </div>
-                <div class="glass-card rounded-2xl p-6 text-white">
+                <div class="glass-card rounded-2xl p-6 text-white backdrop-blur-md">
                     <h3 class="text-sm font-semibold mb-1">Risk Management</h3>
                     <p class="text-xs opacity-90">Protect your investments</p>
                 </div>
-                <div class="glass-card rounded-2xl p-6 text-white">
+                <div class="glass-card rounded-2xl p-6 text-white backdrop-blur-md">
                     <h3 class="text-sm font-semibold mb-1">Advisory Services</h3>
                     <p class="text-xs opacity-90">Strategic business guidance</p>
                 </div>
             </div>
 
-            <!-- Main Text -->
-            <div class="">
-                <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-white text-shadow mb-6">
-                    Financial Excellence Redefined
-                </h1>
-                <p class="text-sm md:text-xl text-white/90 mb-10 leading-relaxed text-shadow">
-                    Empowering businesses with strategic financial solutions, comprehensive tax planning, 
-                    and expert advisory services that drive sustainable growth.
-                </p>
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-white mb-6">
+                Financial Excellence Redefined
+            </h1>
+            <p class="text-lg md:text-xl text-white/90 mb-10 max-w-2xl">
+                Empowering businesses with strategic financial solutions, comprehensive tax planning, 
+                and expert advisory services that drive sustainable growth.
+            </p>
 
-                <!-- CTA Buttons -->
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="{{ url_for('public.contact') }}" 
-                        class="cta-btn cta-primary text-center text-[#141495]">
-                        Schedule Consultation
-                    </a>
-                    <a href="{{ url_for('public.services') }}" 
-                        class="cta-btn cta-secondary text-center">
-                        Our Services
-                    </a>
-                </div>
-                
+            <div class="flex flex-col sm:flex-row gap-4">
+                <a href="{{ url_for('public.contact') }}" class="cta-btn cta-primary">Schedule Consultation</a>
+                <a href="{{ url_for('public.services') }}" class="cta-btn cta-secondary">Our Services</a>
             </div>
         </div>
     </div>
 
     <!-- Scroll Indicator -->
-    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/70 flex flex-col items-center gap-2">
-        <span class="text-sm tracking-widest">SCROLL TO EXPLORE</span>
+    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/70 flex flex-col items-center">
+        <span class="text-sm tracking-widest mb-2">SCROLL TO EXPLORE</span>
         <i class="fas fa-chevron-down animate-bounce text-2xl"></i>
     </div>
 </section>
@@ -297,7 +282,7 @@
                     <div class="relative overflow-hidden">
                         <img
                             src="{{ video.thumb }}"
-                            alt="{{ video.title }}"
+                            alt="{{ video.title | safe }}"
                             class="w-full h-56 object-cover group-hover:scale-105 transition duration-500"
                         >
 
@@ -499,5 +484,33 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
     </div>
 </section>
+
+
+<script>
+// Hero Carousel
+let currentSlide = 0;
+const slides = document.querySelectorAll('.carousel-slide');
+
+function showSlide(index) {
+    slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === index);
+    });
+}
+
+function nextSlide() {
+    currentSlide = (currentSlide + 1) % slides.length;
+    showSlide(currentSlide);
+}
+
+// Auto slide every 5 seconds
+setInterval(nextSlide, 5000);
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    if (slides.length > 0) {
+        showSlide(0);
+    }
+});
+</script>
 
 {% endblock %}

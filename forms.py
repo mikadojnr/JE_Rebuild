@@ -25,14 +25,24 @@ class ContactForm(FlaskForm):
     message = TextAreaField('Your message', validators=[Optional(), Length(max=5000)])
     submit = SubmitField('Submit')
 
+class HeroSlideForm(FlaskForm):
+    title = StringField('Slide Title', validators=[DataRequired(), Length(max=255)])
+    subtitle = TextAreaField('Subtitle / Description')
+    image = FileField('Hero Image', validators=[
+        FileAllowed(['jpg', 'jpeg', 'png', 'webp'], 'Images only!')
+    ])
+    order = IntegerField('Display Order', default=0)
+    is_active = BooleanField('Active', default=True)
+    submit = SubmitField('Save Slide')
+
 class NewsletterForm(FlaskForm):
     """Create / Edit Newsletter Content"""
     title = StringField('Newsletter Title', validators=[DataRequired(), Length(max=255)])
     slug = StringField('Slug', validators=[DataRequired(), Length(max=255)])
     excerpt = TextAreaField('Excerpt')
-    content = TextAreaField('Email Body / Description', validators=[DataRequired()])
+    # content = TextAreaField('Email Body / Description', validators=[DataRequired()])
     google_drive_link = URLField('Google Drive Link', validators=[DataRequired()])
-    pdf_url = URLField('Direct PDF URL (Optional)')
+    # pdf_url = URLField('Direct PDF URL (Optional)')
     featured_image = FileField('Featured Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
     is_published = BooleanField('Publish on Website', default=True)
     submit = SubmitField('Save Newsletter')
@@ -44,7 +54,7 @@ class NewsletterCampaignForm(FlaskForm):
     subject = StringField('Custom Email Subject', validators=[DataRequired(), Length(max=255)])
     submit = SubmitField('Send to All Subscribers')
 
-    
+
 class SubscribeNewsletterForm(FlaskForm):
     """Newsletter Subscription Form"""
     email = StringField('Your email', validators=[DataRequired(), Email()])
@@ -173,3 +183,52 @@ class CreateUserForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user:
             raise ValidationError('Email already registered.')
+
+
+class AdminRegisterForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=80)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Send Invitation')
+
+    def validate_email(self, email):
+        if not email.data.lower().endswith('@johneniolaltd.com'):
+            raise ValidationError('Only @johneniolaltd.com emails are allowed.')
+        
+        user = User.query.filter_by(email=email.data.lower()).first()
+        if user:
+            raise ValidationError('Email already registered.')
+
+
+class SetPasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[DataRequired(), Length(min=8)])
+    confirm_password = PasswordField('Confirm Password', validators=[
+        DataRequired(), EqualTo('password', message='Passwords must match')
+    ])
+    submit = SubmitField('Activate Account')
+
+
+class ForgotPasswordForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Send Reset Link')
+
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[DataRequired(), Length(min=8)])
+    confirm_password = PasswordField('Confirm Password', validators=[
+        DataRequired(), EqualTo('password')
+    ])
+    submit = SubmitField('Reset Password')
+
+
+class TestimonialLinkForm(FlaskForm):
+    client_name = StringField('Client Name', validators=[DataRequired()])
+    client_company = StringField('Company Name')
+    email = StringField('Client Email', validators=[DataRequired(), Email()])
+    expires_in_days = IntegerField('Link Valid For (Days)', default=7, validators=[NumberRange(min=1, max=30)])
+    submit = SubmitField('Generate Submission Link')
+
+
+class PublicTestimonialForm(FlaskForm):
+    content = TextAreaField('Your Testimonial', validators=[DataRequired(), Length(min=20, max=2000)])
+    rating = IntegerField('Rating (1-5)', validators=[DataRequired(), NumberRange(min=1, max=5)])
+    submit = SubmitField('Submit Testimonial')

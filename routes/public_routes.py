@@ -3,19 +3,22 @@ Public Routes for John & Eniola Consultancy Website
 """
 import os
 import secrets
-from flask import Blueprint, json, render_template, request, jsonify, current_app, url_for, json, jsonify
+from flask import Blueprint, flash, json, render_template, request, jsonify, current_app, url_for, json, jsonify
 import requests
 from flask_mail import Message
 from sqlalchemy import desc
+from werkzeug.utils import redirect
 from models import (
-    BlogPost, Newsletter, Service, Testimonial, TeamMember, Subscriber, 
-    Comment, SiteSettings, Media
+    BlogPost, HeroSlide, Newsletter, Service, Testimonial, TeamMember, Subscriber, 
+    Comment, SiteSettings, Media, TestimonialSubmission, User
 )
-from forms import ContactForm, NewsletterForm, CommentForm, SubscribeNewsletterForm
+from forms import ContactForm, ForgotPasswordForm, NewsletterForm, CommentForm, PublicTestimonialForm, ResetPasswordForm, SetPasswordForm, SubscribeNewsletterForm
 from app import db, mail
 from bleach import clean
 from datetime import datetime
 from dotenv import load_dotenv
+
+from utils import send_password_reset_email
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -108,6 +111,21 @@ def inject_site_settings():
     return {'site_settings': get_site_settings()}
 
 
+
+@public_bp.route('/test-email')
+def test_email():
+    try:
+        msg = Message(
+            subject="Test Email",
+            recipients=["officialudobad@gmail.com"],
+            sender=current_app.config.get('MAIL_DEFAULT_SENDER')
+        )
+        msg.body = "This is a test email from your Flask app."
+        mail.send(msg)
+        return "Test email sent successfully!"
+    except Exception as e:
+        return f"Error: {str(e)}"
+
 @public_bp.route('/')
 def home():
     
@@ -115,13 +133,15 @@ def home():
     services = Service.query.filter_by(is_active=True).order_by(Service.order).limit(6).all()
     testimonials = Testimonial.query.filter_by(is_active=True).order_by(Testimonial.order).all()
     latest_posts = BlogPost.query.filter_by(is_published=True).order_by(desc(BlogPost.published_at)).limit(9).all()
+    hero_slides = HeroSlide.query.filter_by(is_active=True).order_by(HeroSlide.order).all()
     videos = get_youtube_videos()
     print(f"Passing {len(videos)} videos to template")
     return render_template('public/home.html', 
                          services=services,
                          testimonials=testimonials,
                          latest_posts=latest_posts,
-                         videos=videos)
+                         videos=videos,
+                         hero_slides=hero_slides)
 
 
 @public_bp.route('/about')
@@ -148,84 +168,74 @@ def insights():
     
     return render_template('public/insights.html', posts=posts)
 
-
 @public_bp.route('/insights/<string:slug>', methods=['GET', 'POST'])
 def blog_detail(slug):
-    """Blog Detail Page"""
     post = BlogPost.query.filter_by(slug=slug, is_published=True).first_or_404()
     
-    # Increment view count
     post.view_count += 1
     db.session.commit()
-    
+
     form = CommentForm()
-    
-    # Handle comment submission
+
     if form.validate_on_submit():
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            # AJAX request
             try:
+                parent_id = request.form.get('parent_id', type=int)
+                
                 comment = Comment(
                     blog_post_id=post.id,
                     author_name=clean(form.author_name.data),
                     author_email=form.author_email.data,
                     content=clean(form.content.data),
-                    is_approved=False  # Requires admin approval
+                    parent_id=parent_id,
+                    is_approved=False  # All new comments/replies need approval
                 )
                 db.session.add(comment)
                 db.session.commit()
 
-                manage_url = url_for(
-                    'public.manage_comment',
-                    token=comment.edit_token,
-                    _external=True
+                manage_url = url_for(                     
+                    'public.manage_comment',                     
+                    token=comment.edit_token,                     
+                    _external=True                 
+                    )                 
+                msg = Message(                     
+                    subject='Manage Your Comment',                     
+                    recipients=[comment.author_email]                 
+                    )                 
+                
+                msg.html = render_template(
+                    'emails/comment_manager.html',
+                    post=post,
+                    comment=comment,
+                    manage_url=manage_url,
+                    current_year=datetime.now().year
                 )
-
-
-                msg = Message(
-                    subject='Manage Your Comment',
-                    recipients=[comment.author_email]
-                )
-
-                msg.html = f"""
-                <p>Thank you for commenting.</p>
-
-                <p>You can manage your comment anytime using this link:</p>
-
-                <p>
-                <a href="{manage_url}">
-                Manage Comment
-                </a>
-                </p>
-
-                <p>Please save this email.</p>
-                """
 
                 mail.send(msg)
-                
+
                 return jsonify({
                     'success': True,
-                    'message': 'Comment submitted. Awaiting moderation.',
-                    'comment_id': comment.id
+                    'message': 'Your comment has been submitted and is awaiting moderation.'
                 }), 201
             except Exception as e:
-                return jsonify({
-                    'success': False,
-                    'message': f'Error: {str(e)}'
-                }), 400
-    
-    # Get approved comments
-    comments = Comment.query.filter_by(blog_post_id=post.id, is_approved=True).filter_by(parent_id=None).all()
-    
+                return jsonify({'success': False, 'message': str(e)}), 400
+
+    # Get ONLY approved comments and their approved replies
+    comments = Comment.query.filter_by(
+        blog_post_id=post.id,
+        is_approved=True,
+        parent_id=None
+    ).order_by(Comment.created_at.desc()).all()
+
     # Get related posts
     related_posts = BlogPost.query.filter(
         BlogPost.id != post.id,
         BlogPost.is_published == True
     ).order_by(desc(BlogPost.published_at)).limit(3).all()
-    
-    return render_template('public/blog-detail.html', 
-                         post=post, 
-                         form=form, 
+
+    return render_template('public/blog-detail.html',
+                         post=post,
+                         form=form,
                          comments=comments,
                          related_posts=related_posts)
 
@@ -384,6 +394,29 @@ def newsletter_subscribe():
     }), 400
 
 
+@public_bp.route('/unsubscribe')
+def unsubscribe():
+    """Public Unsubscribe Page"""
+    email = request.args.get('email', '').strip().lower()
+
+    if email:
+        subscriber = Subscriber.query.filter_by(email=email).first()
+
+        if subscriber:
+            try:
+                db.session.delete(subscriber)
+                db.session.commit()
+                return render_template(
+                    'public/unsubscribe.html',
+                    success=True,
+                    email=email
+                )
+            except Exception:
+                db.session.rollback()
+
+    return render_template('public/unsubscribe.html', success=False)
+
+
 @public_bp.route('/api/comments/<int:post_id>')
 def get_comments(post_id):
     """Get approved comments for a post (API endpoint)"""
@@ -403,6 +436,96 @@ def get_comments(post_id):
         }
     
     return jsonify([serialize_comment(c) for c in comments])
+
+
+# ============================ ========================== 
+@public_bp.route('/activate/<token>', methods=['GET', 'POST'])
+def activate_account(token):
+    user = User.query.filter_by(activation_token=token).first_or_404()
+    
+    if user.is_active:
+        flash('Account already activated.', 'info')
+        return redirect(url_for('admin.login'))
+    
+    form = SetPasswordForm()
+    
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        user.is_active = True
+        user.activation_token = None
+        db.session.commit()
+        
+        flash('Account activated successfully! You can now login.', 'success')
+        return redirect(url_for('admin.login'))
+    
+    return render_template('admin/activate.html', form=form, user=user)
+
+
+@public_bp.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    form = ForgotPasswordForm()
+    
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data.lower()).first()
+        if user:
+            token = user.generate_reset_token()
+            db.session.commit()
+            send_password_reset_email(user, token)
+        
+        flash('If an account exists with that email, a reset link has been sent.', 'info')
+        return redirect(url_for('admin.login'))
+    
+    return render_template('admin/forgot_password.html', form=form)
+
+
+@public_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    user = User.query.filter_by(reset_token=token).first_or_404()
+    
+    form = ResetPasswordForm()
+    
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        user.reset_token = None
+        db.session.commit()
+        
+        flash('Password reset successful. Please login.', 'success')
+        return redirect(url_for('admin.login'))
+    
+    return render_template('admin/reset_password.html', form=form)
+
+
+@public_bp.route('/submit-testimonial/<token>', methods=['GET', 'POST'])
+def submit_testimonial(token):
+    submission = TestimonialSubmission.query.filter_by(token=token).first_or_404()
+    
+    if submission.is_used or submission.expires_at < datetime.utcnow():
+        return render_template('public/testimonial_expired.html')
+    
+    form = PublicTestimonialForm()
+    
+    if form.validate_on_submit():
+        testimonial = Testimonial(
+            client_name=submission.client_name,
+            client_role=submission.client_company or "Client",
+            content=form.content.data,
+            rating=form.rating.data,
+            is_active=False  # Requires admin approval
+        )
+        db.session.add(testimonial)
+        db.session.commit()
+        
+        # Link submission to testimonial
+        submission.testimonial_id = testimonial.id
+        submission.is_used = True
+        db.session.commit()
+        
+        flash('Thank you! Your testimonial has been submitted and is under review.', 'success')
+        return redirect(url_for('public.home'))
+    
+    return render_template('public/submit_testimonial.html', 
+                         form=form, 
+                         submission=submission)
 
 
 @public_bp.errorhandler(404)

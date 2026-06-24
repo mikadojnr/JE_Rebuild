@@ -1,0 +1,20 @@
+{% extends "emails/email_base.html" %}
+
+{% block title %}Manage Your Comment{% endblock %}
+
+{% block content %}
+    <h3>Thank you for your comment!</h3>
+    <p>We've received your comment on the article:</p>
+    <p><strong>{{ post.title }}</strong></p>
+    
+    <div style="background: #f8fafc; border-left: 5px solid #141495; padding: 20px; margin: 25px 0; border-radius: 6px;">
+        <p><strong>Your Comment:</strong></p>
+        <p>"{{ comment.content }}"</p>
+    </div>
+    
+    <p>You can edit or delete your comment at any time using the button below:</p>
+    
+    <a href="{{ manage_url }}" class="button">Manage My Comment</a>
+    
+    <p><small>This link is unique to you. Please save it for future reference.</small></p>
+{% endblock %}

@@ -5,7 +5,7 @@
     <a href="{{ url_for('admin.newsletter_list') }}" class="bg-[#141495] text-white px-6 py-3 rounded">📬 Send Newsletter</a>
 </div>
 {% if subscribers.items %}
-<div class="bg-white rounded-lg shadow overflow-hidden">
+<div class="bg-white rounded-lg shadow overflow-x-auto">
     <table class="w-full">
         <thead class="bg-gray-100">
             <tr><th class="px-6 py-3 text-left font-semibold">Email</th><th class="px-6 py-3 text-left font-semibold">Name</th><th class="px-6 py-3 text-left font-semibold">Date</th><th class="px-6 py-3 text-right font-semibold">Actions</th></tr>

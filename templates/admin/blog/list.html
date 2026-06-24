@@ -5,15 +5,16 @@
 {% block content %}
 <div class="flex justify-end items-center mb-8">
     <a href="{{ url_for('admin.blog_create') }}" class="bg-[#141495] text-white px-6 py-3 rounded hover:opacity-90 transition">
-        ➕ Create Post
+        <i class="fa fa-plus"></i> Create Post
     </a>
 </div>
 
 {% if posts.items %}
-<div class="bg-white rounded-lg shadow overflow-hidden">
+<div class="bg-white rounded-lg shadow-lg overflow-x-auto      ">
     <table class="w-full">
         <thead class="bg-gray-100">
             <tr>
+                <th class="px-6 py-3 text-left font-semibold"></th>
                 <th class="px-6 py-3 text-left font-semibold">Title</th>
                 <th class="px-6 py-3 text-left font-semibold">Author</th>
                 <th class="px-6 py-3 text-left font-semibold">Status</th>
@@ -24,7 +25,15 @@
         <tbody class="divide-y">
             {% for post in posts.items %}
             <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4"><strong>{{ post.title[:50] }}...</strong></td>
+                <td class="px-6 py-4">
+                    {% if post.featured_image %}
+                    <img src="{{ post.featured_image }}" alt="Thumbnail" class="h-12 object-cover rounded">
+                    {% else %}
+                    <div class="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-gray-500">
+                        <i class="fa fa-image"></i>
+                    </div>
+                    {% endif %}
+                <td class="px-6 py-4"><strong>{{ post.title[:100] }}...</strong></td>
                 <td class="px-6 py-4">{{ post.author_name }}</td>
                 <td class="px-6 py-4">
                     <span class="px-3 py-1 rounded-full text-sm {% if post.is_published %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">

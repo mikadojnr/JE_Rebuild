@@ -8,9 +8,6 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.dialects.mysql import LONGTEXT
 
-# db is imported and initialized in app.py
-# from app import db
-
 from extensions import db
 
 
@@ -21,18 +18,29 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
-    password_hash = db.Column(db.String(255), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=True)
     is_admin = db.Column(db.Boolean, default=True)
+    is_active = db.Column(db.Boolean, default=False)
+    activation_token = db.Column(db.String(100), unique=True, index=True)
+    reset_token = db.Column(db.String(100), unique=True, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     def set_password(self, password):
-        """Hash password"""
         self.password_hash = generate_password_hash(password)
-    
+
     def check_password(self, password):
-        """Verify password"""
+        if not self.password_hash:
+            return False
         return check_password_hash(self.password_hash, password)
+
+    def generate_activation_token(self):
+        self.activation_token = secrets.token_urlsafe(32)
+        return self.activation_token
+
+    def generate_reset_token(self):
+        self.reset_token = secrets.token_urlsafe(32)
+        return self.reset_tokens
 
 
 class SiteSettings(db.Model):
@@ -134,6 +142,22 @@ class Testimonial(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+class TestimonialSubmission(db.Model):
+    """Time-limited testimonial submission links"""
+    __tablename__ = 'testimonial_submissions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(100), unique=True, nullable=False, index=True)
+    client_name = db.Column(db.String(255), nullable=False)
+    client_company = db.Column(db.String(255))
+    email = db.Column(db.String(120), nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    is_used = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship to final approved testimonial
+    testimonial_id = db.Column(db.Integer, db.ForeignKey('testimonials.id'), nullable=True)
+    testimonial = db.relationship('Testimonial', backref='submission', uselist=False)
 
 class TeamMember(db.Model):
     """Team Members"""
@@ -172,9 +196,9 @@ class Newsletter(db.Model):
     title = db.Column(db.String(255), nullable=False)
     slug = db.Column(db.String(255), unique=True, nullable=False, index=True)
     excerpt = db.Column(db.String(500))
-    content = db.Column(db.Text, nullable=False)          # Email body / description
+    # content = db.Column(db.Text, nullable=False)          # Email body / description
     google_drive_link = db.Column(db.String(500))
-    pdf_url = db.Column(db.String(500))
+    # pdf_url = db.Column(db.String(500))
     featured_image = db.Column(db.String(255))
     is_published = db.Column(db.Boolean, default=False)
     published_at = db.Column(db.DateTime)
@@ -184,6 +208,12 @@ class Newsletter(db.Model):
     # Relationship to campaigns
     campaigns = db.relationship('NewsletterCampaign', backref='newsletter', lazy=True)
 
+    def has_been_sent(self):
+        return NewsletterCampaign.query.filter_by(
+            newsletter_id=self.id,
+            is_sent=True
+        ).first() is not None
+
 
 class NewsletterCampaign(db.Model):
     """Tracks each time a newsletter is sent"""
@@ -191,7 +221,6 @@ class NewsletterCampaign(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     newsletter_id = db.Column(db.Integer, db.ForeignKey('newsletters.id'), nullable=False)
-    
     subject = db.Column(db.String(255), nullable=False)
     sent_count = db.Column(db.Integer, default=0)
     is_sent = db.Column(db.Boolean, default=False)
@@ -214,3 +243,19 @@ class Media(db.Model):
     alt_text = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class HeroSlide(db.Model):
+    """Hero Carousel Slides with Local Image Upload"""
+    __tablename__ = 'hero_slides'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255), nullable=False)
+    subtitle = db.Column(db.Text)
+    image_path = db.Column(db.String(500), nullable=False)   # Local file path
+    order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<HeroSlide {self.title}>"

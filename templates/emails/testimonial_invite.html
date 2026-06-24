@@ -1,0 +1,28 @@
+{% extends "emails/email_base.html" %}
+
+{% block title %}Share Your Testimonial{% endblock %}
+
+{% block content %}
+    <h3>Dear {{ submission.client_name }},</h3>
+    
+    <p>Thank you for choosing <strong>John & Eniola Consultancy</strong>.</p>
+    
+    <p>We would be honored if you could share your experience with us through a short testimonial.</p>
+    
+    <p>Your feedback helps us improve and helps other businesses make informed decisions.</p>
+    
+    <div style="text-align: center; margin: 35px 0;">
+        <a href="{{ submission_url }}" 
+           class="button" 
+           style="padding: 16px 40px; font-size: 1.1em;">
+            Submit Your Testimonial Now
+        </a>
+    </div>
+    
+    <p><small>This personalized link will expire in <strong>{{ days_remaining }} days</strong>.</small></p>
+    
+    <p style="color: #666; font-size: 0.9em;">
+        If the button doesn't work, copy and paste this link into your browser:<br>
+        <a href="{{ submission_url }}">{{ submission_url }}</a>
+    </p>
+{% endblock %}

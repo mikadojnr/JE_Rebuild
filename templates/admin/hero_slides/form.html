@@ -1,0 +1,50 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}{{ action }} Hero Slide{% endblock %}
+
+{% block content %}
+<div class="max-w-full mx-auto">
+    <form method="POST" enctype="multipart/form-data" class="bg-white rounded-2xl shadow p-10 space-y-8">
+        {{ form.hidden_tag() }}
+        
+        <div>
+            <label class="block font-semibold mb-2">{{ form.title.label }}</label>
+            {{ form.title(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#141495]") }}
+            {% if form.title.errors %}<p class="text-red-500 text-sm mt-1">{{ form.title.errors[0] }}</p>{% endif %}
+        </div>
+        
+        <div>
+            <label class="block font-semibold mb-2">{{ form.subtitle.label }}</label>
+            {{ form.subtitle(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#141495]", rows="4") }}
+        </div>
+        
+        <div>
+            <label class="block font-semibold mb-2">{{ form.image.label }}</label>
+            {{ form.image(class="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-[#141495] file:text-white hover:file:bg-[#0f0f7a]") }}
+            {% if slide and slide.image_path %}
+            <div class="mt-3">
+                <img src="{{ slide.image_path }}" alt="Current" class="max-h-48 rounded border">
+                <p class="text-xs text-gray-500 mt-1">Current image (upload new one to replace)</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="grid grid-cols-2 gap-6">
+            <div>
+                <label class="block font-semibold mb-2">{{ form.order.label }}</label>
+                {{ form.order(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#141495]") }}
+            </div>
+            <div class="flex items-center gap-3 pt-8">
+                {{ form.is_active(class="w-5 h-5 accent-[#141495]") }}
+                <label class="font-medium cursor-pointer">{{ form.is_active.label }}</label>
+            </div>
+        </div>
+        
+        <div class="flex gap-4 pt-8 border-t">
+            {{ form.submit(class="bg-[#141495] text-white px-10 py-4 rounded-xl hover:bg-[#0f0f7a] transition font-medium") }}
+            <a href="{{ url_for('admin.hero_slides_list') }}" 
+               class="px-10 py-4 border border-gray-300 rounded-xl hover:bg-gray-50 transition">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

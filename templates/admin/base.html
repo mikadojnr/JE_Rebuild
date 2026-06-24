@@ -6,9 +6,9 @@
     <title>{% block title %}Admin Dashboard{% endblock %} - John & Eniola</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
-
     <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
-   
+
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
 
     
     {% block extra_head %}{% endblock %}
@@ -52,6 +52,11 @@
                 <i class="text-xl fa-solid fa-chart-column"></i> Dashboard
             </a>
 
+            <a href="{{ url_for('admin.hero_slides_list') }}"
+               class="admin-nav-link {% if 'hero_slides' in request.endpoint %}active{% endif %}">
+                <i class="text-xl fa-solid fa-images"></i> Hero Slides
+            </a>
+
             <a href="{{ url_for('admin.blog_list') }}"
                class="admin-nav-link {% if 'blog' in request.endpoint %}active{% endif %}">
                 <i class="text-xl fa-solid fa-file-pen"></i> Blog Posts
@@ -72,6 +77,11 @@
                 <i class="text-xl fa-solid fa-star"></i> Testimonials
             </a>
 
+            <a href="{{ url_for('admin.testimonial_links') }}"
+               class="admin-nav-link {% if 'testimonial_links' in request.endpoint %}active{% endif %}">
+                <i class="text-xl fa-solid fa-link"></i> Testimonial Links
+            </a>
+
             <a href="{{ url_for('admin.comments_list') }}"
                class="admin-nav-link {% if 'comments' in request.endpoint %}active{% endif %}">
                 <i class="text-xl fa-solid fa-comment"></i> Comments
@@ -86,6 +96,10 @@
                class="admin-nav-link {% if 'newsletter' in request.endpoint %}active{% endif %}">
                 <i class="text-xl fa-solid fa-mailchimp"></i> Newsletter
             </a>
+
+            <a href="{{ url_for('admin.admins_list') }}"
+               class="admin-nav-link {% if 'admins' in request.endpoint %}active{% endif %}">
+                <i class="text-xl fa-solid fa-user-shield"></i> Admins
 
             <a href="{{ url_for('admin.site_settings') }}"
                class="admin-nav-link {% if 'site_settings' in request.endpoint %}active{% endif %}">

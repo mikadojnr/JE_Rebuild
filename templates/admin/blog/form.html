@@ -16,7 +16,7 @@
         
         <div>
             <label class="block font-semibold mb-2">{{ form.slug.label }}</label>
-            {{ form.slug(class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-[#141495]") }}
+            {{ form.slug(class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-[#141495]", readonly=True) }}
             {% if form.slug.errors %}<p class="text-red-500 text-sm mt-1">{{ form.slug.errors[0] }}</p>{% endif %}
         </div>
         

@@ -1,0 +1,53 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Manage Admins{% endblock %}
+
+{% block content %}
+<div class="flex justify-end items-center mb-8">
+    <a href="{{ url_for('admin.admin_create') }}" 
+       class="bg-[#141495] text-white px-6 py-3 rounded-lg hover:bg-[#0f0f7a] transition flex items-center gap-2">
+        <i class="fa fa-plus"></i> Add New Admin
+    </a>
+</div>
+
+<div class="bg-white rounded-2xl shadow overflow-x-auto">
+    <table class="w-full">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-4 text-left font-semibold">Username</th>
+                <th class="px-6 py-4 text-left font-semibold">Email</th>
+                <th class="px-6 py-4 text-left font-semibold">Status</th>
+                <th class="px-6 py-4 text-left font-semibold">Joined</th>
+                <th class="px-6 py-4 text-right font-semibold">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y">
+            {% for admin in admins %}
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-5 font-medium">{{ admin.username }}</td>
+                <td class="px-6 py-5">{{ admin.email }}</td>
+                <td class="px-6 py-5">
+                    <span class="px-3 py-1 text-xs rounded-full 
+                        {% if admin.is_active %}bg-green-100 text-green-700{% else %}bg-yellow-100 text-yellow-700{% endif %}">
+                        {% if admin.is_active %}Active{% else %}Pending Activation{% endif %}
+                    </span>
+                </td>
+                <td class="px-6 py-5 text-sm text-gray-500">
+                    {{ admin.created_at.strftime('%b %d, %Y') }}
+                </td>
+                <td class="px-6 py-5 text-right space-x-4">
+                    <a href="{{ url_for('admin.admin_edit', user_id=admin.id) }}" class="text-blue-600 hover:text-blue-800">
+                        <i class="fa fa-edit"></i>
+                    </a>
+
+                    <button onclick="deleteViaAjax('{{ url_for('admin.admin_delete', user_id=admin.id) }}')" 
+                            class="text-red-600 hover:text-red-800">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

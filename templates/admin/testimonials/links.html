@@ -1,0 +1,100 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Testimonial Submission Links{% endblock %}
+
+{% block content %}
+<div class="flex justify-end items-center mb-8">
+    <a href="{{ url_for('admin.generate_testimonial_link') }}" 
+       class="bg-[#141495] text-white px-6 py-3 rounded-lg hover:bg-[#0f0f7a] transition flex items-center gap-2">
+        <i class="fa fa-plus"></i> Generate New Link
+    </a>
+</div>
+
+<div class="bg-white rounded-2xl shadow overflow-x-auto">
+    <table class="w-full">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-4 text-left font-semibold">Client Name</th>
+                <th class="px-6 py-4 text-left font-semibold">Company</th>
+                <th class="px-6 py-4 text-left font-semibold">Email</th>
+                <th class="px-6 py-4 text-left font-semibold">Status</th>
+                <th class="px-6 py-4 text-left font-semibold">Expires</th>
+                <th class="px-6 py-4 text-right font-semibold">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y">
+            {% for sub in submissions %}
+            <tr class="hover:bg-gray-50">
+                <td class="px-6 py-5 font-medium">{{ sub.client_name }}</td>
+                <td class="px-6 py-5">{{ sub.client_company or '—' }}</td>
+                <td class="px-6 py-5">{{ sub.email }}</td>
+                <td class="px-6 py-5">
+                    <span class="px-3 py-1 text-xs rounded-full 
+                        {% if sub.is_used %}bg-green-100 text-green-700
+                        {% elif sub.expires_at < now %}bg-red-100 text-red-700
+                        {% else %}bg-emerald-100 text-emerald-700{% endif %}">
+                        {% if sub.is_used %}Used
+                        {% elif sub.expires_at < now %}Expired
+                        {% else %}Active{% endif %}
+                    </span>
+                </td>
+                <td class="px-6 py-5 text-sm text-gray-500">
+                    {{ sub.expires_at.strftime('%b %d, %Y') }}
+                </td>
+                <td class="px-6 py-5 text-right space-x-3">
+                    {% if not sub.is_used %}
+                    <button onclick="copyLink('{{ url_for('public.submit_testimonial', token=sub.token, _external=True) }}')" 
+                            class="text-blue-600 hover:text-blue-800 px-3 py-1 text-sm">
+                        <i class="fa fa-copy"></i> Copy
+                    </button>
+                    {% endif %}
+                    
+                    {% if not sub.is_used and sub.expires_at < now %}
+                    <button onclick="resendLink({{ sub.id }})" 
+                            class="text-amber-600 hover:text-amber-700 text-sm">
+                        <i class="fa fa-redo"></i> Resend
+                    </button>
+                    {% endif %}
+                    
+                    <button onclick="deleteViaAjax('{{ url_for('admin.testimonial_link_delete', sub_id=sub.id) }}', this.closest('tr'))" 
+                            class="text-red-600 hover:text-red-800">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Copy link to clipboard
+function copyLink(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        const originalText = event.target.innerHTML;
+        event.target.innerHTML = '<i class="fa fa-check"></i> Copied!';
+        
+        setTimeout(() => {
+            event.target.innerHTML = originalText;
+        }, 2000);
+    }).catch(err => {
+        alert('Failed to copy link');
+    });
+}
+
+// Resend link
+function resendLink(id) {
+    if (confirm("Resend testimonial submission link?")) {
+        fetch(`/admin/testimonials/links/${id}/resend`, { 
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => alert(data.message || 'Link resent!'))
+        .catch(() => alert("Failed to resend link"));
+    }
+}
+</script>
+{% endblock %}

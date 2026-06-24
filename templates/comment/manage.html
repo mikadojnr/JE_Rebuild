@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Comment - John & Eniola Consultancy{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-20 px-4">
+    <div class="bg-white rounded-2xl shadow-lg p-10">
+        <h2 class="text-3xl font-bold mb-8">Manage Your Comment</h2>
+        
+        <div class="mb-8 p-6 bg-gray-50 rounded-xl">
+            <p class="text-sm text-gray-500 mb-2">Your Comment:</p>
+            <p class="text-gray-700 italic">"{{ comment.content }}"</p>
+        </div>
+
+        <form id="edit-form" method="POST" action="{{ url_for('public.edit_comment', token=comment.edit_token) }}">
+            <div class="mb-6">
+                <label class="block font-semibold mb-2">Edit Comment</label>
+                <textarea name="content" rows="6" 
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#141495]">{{ comment.content }}</textarea>
+            </div>
+            
+            <div class="flex gap-4">
+                <button type="submit" 
+                        class="bg-[#141495] text-white px-8 py-3 rounded-xl hover:bg-[#0f0f7a]">
+                    Save Changes
+                </button>
+                
+                <button type="button" onclick="deleteComment()" 
+                        class="px-8 py-3 border border-red-500 text-red-600 rounded-xl hover:bg-red-50">
+                    Delete Comment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteComment() {
+    if (confirm("Are you sure you want to delete this comment?")) {
+        fetch("{{ url_for('public.delete_comment', token=comment.edit_token) }}", {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            if (data.success) window.location.href = "{{ url_for('public.home') }}";
+        });
+    }
+}
+</script>
+{% endblock %}

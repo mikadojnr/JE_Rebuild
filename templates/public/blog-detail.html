@@ -1,7 +1,19 @@
 {% extends "base.html" %}
 
-{% block title %}{{ post.title }} - John & Eniola Consultancy{% endblock %}
+{% block meta %}
 
+{% if post %}
+<meta property="og:title" content="{{ post.title }}">
+<meta property="og:description" content="{{ post.excerpt or post.content[:150]|striptags }}">
+<meta property="og:image" content="{{ post.featured_image|default('https://yourdomain.com/static/images/default-og.jpg', true) }}">
+<meta property="og:url" content="{{ request.url }}">
+<meta property="og:type" content="article">
+<meta name="twitter:card" content="summary_large_image">
+{% endif %}
+
+{% endblock %}
+
+{% block title %}{{ post.title }} - John & Eniola Consultancy{% endblock %}
 
 <style>
     .prose img {
@@ -22,13 +34,15 @@
     }
 </style>
 
-
 {% block content %}
 <!-- Hero Section -->
 <section class="hero-section">
-    <!-- <div class="absolute inset-0 bg-black/40"></div> -->
     <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="breadcrumb mb-6"><a href="{{ url_for('public.home') }}">Home</a>  / <a href="{{ url_for('public.insights') }}">Insights</a> / {{ post.title[:30] }}</div>
+        <div class="breadcrumb mb-6">
+            <a href="{{ url_for('public.home') }}">Home</a> / 
+            <a href="{{ url_for('public.insights') }}">Insights</a> / 
+            {{ post.title[:30] }}
+        </div>
         <h1 class="text-5xl md:text-6xl font-bold mb-6">{{ post.title }}</h1>
         <div class="flex items-center gap-4 text-gray-200">
             <span>{{ post.published_at.strftime('%B %d, %Y') if post.published_at else 'Unpublished' }}</span>
@@ -41,6 +55,7 @@
 <section class="py-20 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            
             <!-- Main Content -->
             <div class="lg:col-span-2">
                 {% if post.featured_image %}
@@ -67,9 +82,28 @@
                 <div class="mb-12 pb-12 border-b">
                     <h4 class="font-semibold mb-4">Share This Article</h4>
                     <div class="flex gap-4">
-                        <a href="#" class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center hover:opacity-80"><i class="fa-brands fa-x-twitter"></i></a>
-                        <a href="#" class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:opacity-80"><i class="fa-brands fa-facebook-f"></i></a>
-                        <a href="#" class="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center hover:opacity-80"><i class="fa-brands fa-linkedin-in"></i></a>
+                        
+                        <!-- Twitter / X -->
+                        <a href="https://twitter.com/intent/tweet?text={{ post.title|urlencode }}&url={{ request.url|urlencode }}&via=JohnEniolaCons" 
+                        target="_blank"
+                        class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center hover:opacity-90 transition">
+                            <i class="fa-brands fa-x-twitter"></i>
+                        </a>
+                        
+                        <!-- Facebook -->
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url|urlencode }}" 
+                        target="_blank"
+                        class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:opacity-90 transition">
+                            <i class="fa-brands fa-facebook-f"></i>
+                        </a>
+                        
+                        <!-- LinkedIn -->
+                        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.url|urlencode }}" 
+                        target="_blank"
+                        class="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center hover:opacity-90 transition">
+                            <i class="fa-brands fa-linkedin-in"></i>
+                        </a>
+                        
                     </div>
                 </div>
                 
@@ -79,60 +113,54 @@
                     
                     <!-- Comment Form -->
                     <div class="mb-12 p-8 bg-gray-50 rounded-lg">
-                        <h4 class="font-semibold mb-6">Leave a Reply</h4>
+                        <h4 class="font-semibold mb-6" id="reply-heading">Leave a Reply</h4>
                         <form id="comment-form" class="space-y-4">
                             {{ form.hidden_tag() }}
-                            
-                            <div>
-                                {{ form.author_name(class="form-control", placeholder="Your name") }}
-                                {% if form.author_name.errors %}
-                                <p class="text-red-500 text-sm mt-1">{{ form.author_name.errors[0] }}</p>
-                                {% endif %}
+                            <input type="hidden" name="parent_id" id="parent_id" value="">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    {{ form.author_name(class="form-control", placeholder="Your name") }}
+                                </div>
+                                <div>
+                                    {{ form.author_email(class="form-control", placeholder="Your email", type="email") }}
+                                </div>
                             </div>
-                            
+
                             <div>
-                                {{ form.author_email(class="form-control", placeholder="Your email", type="email") }}
-                                {% if form.author_email.errors %}
-                                <p class="text-red-500 text-sm mt-1">{{ form.author_email.errors[0] }}</p>
-                                {% endif %}
+                                {{ form.content(class="form-control", rows="5", placeholder="Write your comment or reply...") }}
                             </div>
-                            
-                            <div>
-                                {{ form.content(class="form-control", rows="6", placeholder="Your comment...") }}
-                                {% if form.content.errors %}
-                                <p class="text-red-500 text-sm mt-1">{{ form.content.errors[0] }}</p>
-                                {% endif %}
-                            </div>
-                            
-                            <button type="submit" class="btn-primary hover:text-[#141495] hover:border-[#141495]">Post Comment</button>
+
+                            <button type="submit" class="btn-primary  hover:text-[#141495]">Post Comment</button>
                         </form>
                     </div>
                     
-                    <!-- Comments List -->
+                    <!-- Comments + Approved Replies -->
                     {% if comments %}
-                    <div class="space-y-8">
+                    <div class="space-y-10">
                         {% for comment in comments %}
                         <div class="p-6 border rounded-lg">
                             <div class="flex justify-between items-start mb-4">
                                 <div>
-                                    <h5 class="font-semibold">{{ comment.author_name }}</h5>
-                                    <p class="text-sm text-gray-500">{{ comment.created_at.strftime('%B %d, %Y') }}</p>
+                                    <h5 class="font-semibold">{{ comment.author_name | safe }}</h5>
+                                    <p class="text-sm text-gray-500">{{ comment.created_at.strftime('%B %d, %Y at %H:%M') }}</p>
                                 </div>
+                                <button onclick="replyTo({{ comment.id }})" 
+                                        class="text-[#141495] text-sm hover:underline">Reply</button>
                             </div>
-                            <p class="text-gray-700">{{ comment.content }}</p>
-                            
-                            <!-- Nested Replies -->
-                            {% if comment.replies %}
-                            <div class="mt-6 space-y-4 ml-6 border-l-2 pl-6">
-                                {% for reply in comment.replies %}
-                                <div class="p-4 bg-gray-50 rounded">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div>
-                                            <h6 class="font-semibold text-sm">{{ reply.author_name }}</h6>
-                                            <p class="text-xs text-gray-500">{{ reply.created_at.strftime('%B %d, %Y') }}</p>
-                                        </div>
+                            <p class="text-gray-700">{{ comment.content | safe }}</p>
+
+                            <!-- Approved Replies Only -->
+                            {% set approved_replies = comment.replies|selectattr('is_approved', 'equalto', True)|list %}
+                            {% if approved_replies %}
+                            <div class="mt-8 ml-8 space-y-6 border-l-2 border-gray-100 pl-6">
+                                {% for reply in approved_replies %}
+                                <div class="p-5 bg-gray-50 rounded-lg">
+                                    <div class="flex justify-between items-start">
+                                        <h6 class="font-semibold text-sm">{{ reply.author_name | safe }}</h6>
+                                        <span class="text-xs text-gray-500">{{ reply.created_at.strftime('%b %d, %Y at %H:%M') }}</span>
                                     </div>
-                                    <p class="text-sm text-gray-700">{{ reply.content }}</p>
+                                    <p class="text-sm text-gray-700 mt-2">{{ reply.content | safe }}</p>
                                 </div>
                                 {% endfor %}
                             </div>
@@ -141,44 +169,29 @@
                         {% endfor %}
                     </div>
                     {% else %}
-                    <p class="text-gray-500 mb-8">No comments yet. Be the first to comment!</p>
+                    <p class="text-gray-500 mb-8">No approved comments yet. Be the first to comment!</p>
                     {% endif %}
                 </div>
             </div>
             
             <!-- Sidebar -->
             <div class="lg:col-span-1 flex">
-                <!-- Newsletter -->
                 <div class="card bg-[#141495] text-white h-full w-full sticky top-8">
-                    <h5 class="mb-3 text-md sm:text-sm md:text-lg font-semibold leading-snug text-[#141495]">
-                        Subscribe to Newsletter
-                    </h5>
-
+                    <h5 class="mb-3 text-md sm:text-sm md:text-lg font-semibold leading-snug">Subscribe to Newsletter</h5>
                     <form id="newsletter-form" class="space-y-3">
                         {{ newsletter_form.hidden_tag() }}
-
-                        {{ newsletter_form.email(
-                            class="form-control bg-white text-[#141495] border-none",
-                            placeholder="Your email"
-                        ) }}
-
-                        <button type="submit" class="w-full btn-primary hover:text-[#141495]">
-                            Subscribe
-                        </button>
+                        {{ newsletter_form.email(class="form-control bg-white text-[#141495] border-none", placeholder="Your email") }}
+                        <button type="submit" class="w-full btn-primary hover:text-[#141495]">Subscribe</button>
                     </form>
 
                     <hr class="mt-10 mb-10">
 
-                    <h5 class="mb-3 text-md sm:text-sm md:text-lg font-semibold leading-snug text-[#141495]">Recent Posts</h5>
+                    <h5 class="mb-3 text-md sm:text-sm md:text-lg font-semibold leading-snug">Recent Posts</h5>
                     <div class="space-y-4">
                         {% for related in related_posts %}
                         <a href="{{ url_for('public.blog_detail', slug=related.slug) }}" class="flex items-center block group border p-3 mt-3">
                             {% if related.featured_image %}
-                                <img
-                                    src="{{ related.featured_image }}"
-                                    alt="{{ related.title }}"
-                                    class="w-24 h-24 rounded-lg object-cover flex-shrink-0"
-                                />
+                                <img src="{{ related.featured_image }}" alt="{{ related.title }}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">
                             {% endif %}
                             <div class="pl-3">
                                 <h5 class="font-semibold text-sm text-[#141495] group-hover:text-[#0800f0] transition line-clamp-2">{{ related.title }}</h5>
@@ -187,8 +200,6 @@
                         </a>
                         {% endfor %}
                     </div>
-
-
                 </div>
             </div>
         </div>
@@ -196,40 +207,42 @@
 </section>
 
 <script>
+function replyTo(commentId) {
+    document.getElementById('parent_id').value = commentId;
+    document.getElementById('reply-heading').textContent = 'Write a Reply';
+    document.querySelector('#comment-form textarea').focus();
+}
+
+// Reset reply state after submission
 document.getElementById('comment-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
     const formData = new FormData(this);
     const submitBtn = this.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.textContent = 'Posting...';
     submitBtn.disabled = true;
-    
+
     fetch('{{ url_for('public.blog_detail', slug=post.slug) }}', {
         method: 'POST',
         body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
     .then(response => response.json())
     .then(data => {
         alert(data.message);
         if (data.success) {
-            document.getElementById('comment-form').reset();
-            setTimeout(() => location.reload(), 1000);
+            this.reset();
+            document.getElementById('parent_id').value = '';
+            document.getElementById('reply-heading').textContent = 'Leave a Reply';
+            setTimeout(() => location.reload(), 800);
         }
     })
-    .catch(error => {
-        alert('Error posting comment');
-        console.error('Error:', error);
-    })
+    .catch(() => alert('Error posting comment'))
     .finally(() => {
         submitBtn.textContent = originalText;
         submitBtn.disabled = false;
     });
+
+    e.preventDefault();
 });
-
-
 </script>
 {% endblock %}

@@ -1,27 +1,21 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>{{ subject }}</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        {{ content | safe }}
-        
-        {% if google_drive_link or pdf_url %}
-        <div style="margin: 30px 0; text-align: center;">
-            <a href="{{ pdf_url or google_drive_link }}" 
-               style="background:#141495; color:white; padding:12px 30px; text-decoration:none; border-radius:6px; display:inline-block;">
-                📄 Download Full PDF
-            </a>
-        </div>
-        {% endif %}
-        
-        <hr style="margin: 30px 0;">
-        <p style="font-size: 0.9em; color: #666;">
-            You received this email because you subscribed to John & Eniola Consultancy updates.<br>
-            <a href="{{ url_for('public.unsubscribe', email=recipient_email, _external=True) }}">Unsubscribe</a>
-        </p>
+{% extends "emails/email_base.html" %}
+
+{% block title %}{{ subject }}{% endblock %}
+
+{% block content %}
+    {{ content | safe }}
+    
+    {% if google_drive_link or pdf_url %}
+    <div style="margin: 35px 0; text-align: center;">
+        <a href="{{ pdf_url or google_drive_link }}" 
+           class="button" style="background:#141495; color:white; padding:16px 40px;">
+            📄 Download Full PDF
+        </a>
     </div>
-</body>
-</html>
+
+    <a href="{{ url_for('public.unsubscribe', email=recipient_email|default(''), _external=True) }}" 
+                   style="color: #64748b; text-decoration: underline;">
+                    Unsubscribe
+                </a>
+    {% endif %}
+{% endblock %}

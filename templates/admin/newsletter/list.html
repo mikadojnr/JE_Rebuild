@@ -3,16 +3,28 @@
 {% block page_title %}Newsletters Management{% endblock %}
 
 {% block content %}
-<div class="flex justify-between items-center mb-8">
-    <h1 class="text-3xl font-bold text-gray-800">Newsletters</h1>
-    <a href="{{ url_for('admin.newsletter_create') }}" 
-       class="bg-[#141495] hover:bg-[#0f0f7a] text-white px-6 py-3 rounded-lg transition flex items-center gap-2">
-        <i class="fa fa-plus"></i> New Newsletter
-    </a>
+<div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
+    <h1 class="text-2xl md:text-3xl font-bold text-gray-800">
+        Newsletters
+    </h1>
+
+    <div class="flex flex-col sm:flex-row gap-3">
+        <a href="{{ url_for('admin.newsletter_sent') }}"
+           class="bg-white border border-[#141495] text-[#141495] hover:bg-[#0f0f7a] hover:text-white px-4 md:px-6 py-3 rounded-lg transition flex items-center justify-center gap-2">
+            <i class="fa fa-envelope"></i>
+            <span>Sent Newsletters</span>
+        </a>
+
+        <a href="{{ url_for('admin.newsletter_create') }}"
+           class="bg-[#141495] hover:bg-[#0f0f7a] text-white px-4 md:px-6 py-3 rounded-lg transition flex items-center justify-center gap-2">
+            <i class="fa fa-plus"></i>
+            <span>New Newsletter</span>
+        </a>
+    </div>
 </div>
 
 {% if newsletters %}
-<div class="bg-white rounded-xl shadow overflow-hidden">
+<div class="bg-white rounded-xl shadow overflow-x-auto">
     <table class="w-full">
         <thead class="bg-gray-50">
             <tr>
@@ -28,7 +40,6 @@
             <tr class="hover:bg-gray-50 transition">
                 <td class="px-6 py-5">
                     <div class="font-medium">{{ nl.title }}</div>
-                    <div class="text-xs text-gray-500">{{ nl.slug }}</div>
                 </td>
                 <td class="px-6 py-5">
                     <span class="inline-flex px-3 py-1 text-xs font-medium rounded-full
@@ -50,10 +61,10 @@
                     <a href="{{ url_for('public.newsletter_detail', slug=nl.slug) }}" target="_blank" class="text-purple-600 hover:text-purple-800">
                         <i class="fa fa-eye"></i>
                     </a>
-                    <button onclick="sendNewsletter({{ nl.id }})" 
-                            class="text-emerald-600 hover:text-emerald-700">
+                    <button onclick="quickSendNewsletter({{ nl.id }})" class="text-emerald-600 hover:text-emerald-700">
                         <i class="fa fa-paper-plane"></i>
                     </button>
+
                     <button onclick="deleteViaAjax('{{ url_for('admin.newsletter_delete', nl_id=nl.id) }}', this.closest('tr'))" 
                             class="text-red-600 hover:text-red-800">
                         <i class="fa fa-trash"></i>
@@ -76,19 +87,19 @@
 
 {% block extra_js %}
 <script>
-function sendNewsletter(id) {
-    if (confirm("Send this newsletter to all active subscribers? This action cannot be undone.")) {
-        fetch(`/admin/newsletter/${id}/send`, {
-            method: 'POST',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert(data.message || 'Newsletter sent successfully!');
-            location.reload();
-        })
-        .catch(() => alert('Failed to send newsletter'));
-    }
+function quickSendNewsletter(id) {
+    if (!confirm("Send this newsletter to all active subscribers?")) return;
+
+    fetch(`/admin/newsletter/${id}/send`, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        alert(data.message);
+        if (data.success) location.reload();
+    })
+    .catch(() => alert("Failed to send"));
 }
 </script>
 {% endblock %}

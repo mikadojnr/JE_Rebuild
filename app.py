@@ -5,7 +5,7 @@ Flask Application Entry Point
 
 from datetime import datetime
 import os
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from extensions import db, login_manager, mail, migrate
 from dotenv import load_dotenv
 
@@ -42,15 +42,19 @@ def create_app():
     
     # === MAIL CONFIGURATION ===
     app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
-    app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
-    app.config['MAIL_USE_TLS'] = True
-    app.config['MAIL_USE_SSL'] = False
+    app.config['MAIL_PORT'] = 465
+    app.config['MAIL_USE_SSL'] = True
+    app.config['MAIL_USE_TLS'] = False
+
     app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-    app.config['MAIL_DEFAULT_SENDER'] = (
-        os.getenv('MAIL_DEFAULT_SENDER_NAME', 'John & Eniola Consultancy'),
-        os.getenv('MAIL_DEFAULT_SENDER')
-    )
+    
+    # IMPORTANT: Set default sender correctly
+    app.config['MAIL_DEFAULT_SENDER'] = 'John & Eniola Consultancy <' + os.getenv('MAIL_USERNAME') + '>'
+
+    # Debug settings (remove in production)
+    app.config['MAIL_DEBUG'] = True
+    app.config['MAIL_SUPPRESS_SEND'] = False
 
     # Celery Config
     app.config['CELERY_BROKER_URL'] = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
@@ -86,10 +90,23 @@ def create_app():
     from forms import SubscribeNewsletterForm
 
     @app.context_processor
-    def inject_newsletter_form():
+    def inject_now():
         return {
-            'newsletter_form': SubscribeNewsletterForm()
+            "now": datetime.now()
         }
+
+    @app.context_processor
+    def inject_newsletter_form():
+        """Safely inject newsletter subscription form for all templates"""
+        try:
+            # Only process form data on POST requests
+            if request.method == 'POST':
+                return {'newsletter_form': SubscribeNewsletterForm()}
+            else:
+                return {'newsletter_form': SubscribeNewsletterForm(formdata=None)}
+        except:
+            # Fallback for any edge cases (like 404 pages)
+            return {'newsletter_form': SubscribeNewsletterForm(formdata=None)}
 
     @app.context_processor
     def inject_globals():
@@ -136,6 +153,11 @@ def create_app():
 
         return render_template('errors/500.html'), 500
     
+    @app.errorhandler(400)
+    def bad_request_error(error):
+        """Handle bad request / JSON decode errors gracefully"""
+        return render_template('errors/400.html'), 400
+    
     # Create tables and seed data
     with app.app_context():
         from models import User, SiteSettings, Service
@@ -143,6 +165,7 @@ def create_app():
         init_default_data()
     
     return app
+
 
 
 def init_default_data():

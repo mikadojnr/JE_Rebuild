@@ -23,7 +23,7 @@ def init_database():
         print("✓ Database tables created successfully")
 
 
-def create_admin_user(username='admin', email='admin@johneniola.com', password='admin123'):
+def create_admin_user(username='je_consultancy', email='admin@johneniolaltd.com', password='admin123'):
     """Create an admin user"""
     app = create_app()
     
@@ -38,7 +38,8 @@ def create_admin_user(username='admin', email='admin@johneniola.com', password='
         user = User(
             username=username,
             email=email,
-            is_admin=True
+            is_admin=True,
+            is_active=True
         )
         user.set_password(password)
         

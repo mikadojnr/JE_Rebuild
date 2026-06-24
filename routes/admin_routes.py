@@ -2,6 +2,7 @@
 Admin Routes for John & Eniola Consultancy Dashboard
 """
 
+import secrets
 from urllib.parse import urljoin, urlparse
 
 from urllib.parse import urljoin
@@ -11,21 +12,21 @@ from flask_login import login_required, login_user, logout_user, current_user
 from werkzeug.utils import secure_filename
 from functools import wraps
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from models import (
-    NewsletterCampaign, User, BlogPost, Service, TeamMember, Testimonial, 
+    HeroSlide, NewsletterCampaign, TestimonialSubmission, User, BlogPost, Service, TeamMember, Testimonial, 
     Subscriber, Newsletter, Comment, SiteSettings, Media
 )
 from forms import (
-    LoginForm, BlogPostForm, NewsletterForm, ServiceForm, TeamMemberForm, 
-    TestimonialForm, SiteSettingsForm, NewsletterCampaignForm, CreateUserForm
+    AdminRegisterForm, HeroSlideForm, LoginForm, BlogPostForm, NewsletterForm, ServiceForm, TeamMemberForm, 
+    TestimonialForm, SiteSettingsForm, NewsletterCampaignForm, CreateUserForm, TestimonialLinkForm
 )
 from app import db, mail
 from flask_mail import Message
 
 from tasks import send_email_task
-from utils import send_newsletter_email
+from utils import send_activation_email, send_newsletter_email, send_testimonial_invite_email
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -40,14 +41,41 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def save_upload_file(file):
-    """Save uploaded file and return path"""
-    if file and file.filename and allowed_file(file.filename):
-        filename = secure_filename(f"{datetime.now().timestamp()}_{file.filename}")
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
-        file.save(filepath)
-        return f"/{filepath}"
-    return None
+def save_upload_file(file, subfolder=None):
+    """
+    Save uploaded file and return a URL path.
+
+    Examples:
+        save_upload_file(file)
+        -> /static/uploads/image.jpg
+
+        save_upload_file(file, "hero")
+        -> /static/uploads/hero/image.jpg
+
+        save_upload_file(file, "products/electronics")
+        -> /static/uploads/products/electronics/image.jpg
+    """
+    if not file or not file.filename or not allowed_file(file.filename):
+        return None
+
+    filename = secure_filename(
+        f"{datetime.now().timestamp()}_{file.filename}"
+    )
+
+    # Build upload directory
+    upload_dir = UPLOAD_FOLDER
+    if subfolder:
+        upload_dir = os.path.join(UPLOAD_FOLDER, subfolder)
+
+    # Create directory if it doesn't exist
+    os.makedirs(upload_dir, exist_ok=True)
+
+    # Save file
+    filepath = os.path.join(upload_dir, filename)
+    file.save(filepath)
+
+    # Return browser-friendly URL
+    return "/" + filepath.replace(os.sep, "/")
 
 
 def admin_required(f):
@@ -188,7 +216,7 @@ def blog_create():
     if form.validate_on_submit():
         featured_image_path = None
         if form.featured_image.data:
-            featured_image_path = save_upload_file(form.featured_image.data)
+            featured_image_path = save_upload_file(form.featured_image.data, "blog")
         
         tags = [tag.strip() for tag in form.tags.data.split(',')] if form.tags.data else []
         
@@ -223,7 +251,7 @@ def blog_edit(post_id):
     
     if form.validate_on_submit():
         if form.featured_image.data:
-            featured_image_path = save_upload_file(form.featured_image.data)
+            featured_image_path = save_upload_file(form.featured_image.data, "blog")
             post.featured_image = featured_image_path
         
         post.title = form.title.data
@@ -391,7 +419,7 @@ def team_create():
     if form.validate_on_submit():
         image_path = None
         if form.image.data:
-            image_path = save_upload_file(form.image.data)
+            image_path = save_upload_file(form.image.data, "team")
         
         member = TeamMember(
             name=form.name.data,
@@ -421,7 +449,7 @@ def team_edit(member_id):
     
     if form.validate_on_submit():
         if form.image.data:
-            image_path = save_upload_file(form.image.data)
+            image_path = save_upload_file(form.image.data, "team")
             member.image = image_path
         
         member.name = form.name.data
@@ -485,7 +513,7 @@ def testimonial_create():
     if form.validate_on_submit():
         image_path = None
         if form.client_image.data:
-            image_path = save_upload_file(form.client_image.data)
+            image_path = save_upload_file(form.client_image.data, "testimonials")
         
         testimonial = Testimonial(
             client_name=form.client_name.data,
@@ -515,7 +543,7 @@ def testimonial_edit(testimonial_id):
     
     if form.validate_on_submit():
         if form.client_image.data:
-            image_path = save_upload_file(form.client_image.data)
+            image_path = save_upload_file(form.client_image.data, "testimonials")
             testimonial.client_image = image_path
         
         testimonial.client_name = form.client_name.data
@@ -636,12 +664,12 @@ def site_settings():
         
         # Handle logo uploads
         if form.logo_image.data:
-            logo_path = save_upload_file(form.logo_image.data)
+            logo_path = save_upload_file(form.logo_image.data, "site")
             if logo_path:
                 settings.logo_image_path = logo_path
         
         if form.logo_dark_image.data:
-            logo_dark_path = save_upload_file(form.logo_dark_image.data)
+            logo_dark_path = save_upload_file(form.logo_dark_image.data, "site")
             if logo_dark_path:
                 settings.logo_dark_image_path = logo_dark_path
         
@@ -695,15 +723,13 @@ def newsletter_list():
 def newsletter_create():
     form = NewsletterForm()
     if form.validate_on_submit():
-        featured_image_path = save_upload_file(form.featured_image.data) if form.featured_image.data else None
+        featured_image_path = save_upload_file(form.featured_image.data, "newsletter") if form.featured_image.data else None
 
         newsletter = Newsletter(
             title=form.title.data,
             slug=form.slug.data,
             excerpt=form.excerpt.data,
-            content=form.content.data,
             google_drive_link=form.google_drive_link.data,
-            pdf_url=form.pdf_url.data,
             featured_image=featured_image_path,
             is_published=form.is_published.data,
             published_at=datetime.utcnow() if form.is_published.data else None
@@ -725,7 +751,7 @@ def newsletter_edit(nl_id):
 
     if form.validate_on_submit():
         if form.featured_image.data:
-            newsletter.featured_image = save_upload_file(form.featured_image.data)
+            newsletter.featured_image = save_upload_file(form.featured_image.data, "newsletter")
 
         newsletter.title = form.title.data
         newsletter.slug = form.slug.data
@@ -769,6 +795,7 @@ def newsletter_delete(nl_id):
 @admin_bp.route('/newsletter/send', methods=['GET', 'POST'])
 @admin_required
 def newsletter_send():
+    """General Send Newsletter Page"""
     form = NewsletterCampaignForm()
     form.newsletter_id.choices = [(n.id, n.title) for n in Newsletter.query.order_by(Newsletter.title).all()]
 
@@ -782,13 +809,16 @@ def newsletter_send():
 
         success_count = 0
         for sub in subscribers:
-            if send_newsletter_email(form.subject.data, newsletter.content, sub.email):
+            if send_newsletter_email(form.subject.data or newsletter.title, 
+                                   newsletter.excerpt, 
+                                   sub.email, 
+                                   newsletter.google_drive_link):
                 success_count += 1
 
-        # Record the campaign
+        # Record campaign
         campaign = NewsletterCampaign(
             newsletter_id=newsletter.id,
-            subject=form.subject.data,
+            subject=form.subject.data or newsletter.title,
             sent_count=success_count,
             is_sent=True,
             sent_at=datetime.utcnow()
@@ -800,6 +830,37 @@ def newsletter_send():
         return redirect(url_for('admin.newsletter_sent'))
 
     return render_template('admin/newsletter/send.html', form=form)
+
+
+@admin_bp.route('/newsletter/<int:nl_id>/send', methods=['POST'])
+@admin_required
+def newsletter_quick_send(nl_id):
+    """Quick Send from Newsletter List (AJAX)"""
+    newsletter = Newsletter.query.get_or_404(nl_id)
+    subscribers = Subscriber.query.filter_by(is_active=True).all()
+
+    if not subscribers:
+        return jsonify({'success': False, 'message': 'No active subscribers'}), 400
+
+    success_count = 0
+    for sub in subscribers:
+        if send_newsletter_email(newsletter.title, newsletter.excerpt, sub.email, newsletter.google_drive_link):
+            success_count += 1
+
+    campaign = NewsletterCampaign(
+        newsletter_id=newsletter.id,
+        subject=newsletter.title,
+        sent_count=success_count,
+        is_sent=True,
+        sent_at=datetime.utcnow()
+    )
+    db.session.add(campaign)
+    db.session.commit()
+
+    return jsonify({
+        'success': True, 
+        'message': f'Sent to {success_count} subscribers!'
+    })
 
 
 @admin_bp.route('/newsletter/sent')
@@ -850,3 +911,328 @@ def url_has_allowed_host_and_scheme(target):
         test_url.scheme in ('http', 'https')
         and ref_url.netloc == test_url.netloc
     )
+
+# ============ HERO CAROUSEL MANAGEMENT ============
+
+@admin_bp.route('/hero-slides')
+@admin_required
+def hero_slides_list():
+    slides = HeroSlide.query.order_by(HeroSlide.order).all()
+    return render_template('admin/hero_slides/list.html', slides=slides)
+
+
+@admin_bp.route('/hero-slides/create', methods=['GET', 'POST'])
+@admin_required
+def hero_slide_create():
+    form = HeroSlideForm()
+    
+    if form.validate_on_submit():
+        image_path = None
+        if form.image.data:
+            image_path = save_upload_file(form.image.data, "hero")
+        
+        if not image_path:
+            flash('Image is required.', 'danger')
+            return render_template('admin/hero_slides/form.html', form=form, action='Create')
+
+        slide = HeroSlide(
+            title=form.title.data,
+            subtitle=form.subtitle.data,
+            image_path=image_path,
+            order=form.order.data or 0,
+            is_active=form.is_active.data
+        )
+        db.session.add(slide)
+        db.session.commit()
+        
+        flash('Hero slide created successfully!', 'success')
+        return redirect(url_for('admin.hero_slides_list'))
+    
+    return render_template('admin/hero_slides/form.html', form=form, action='Create')
+
+
+@admin_bp.route('/hero-slides/<int:slide_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def hero_slide_edit(slide_id):
+    slide = HeroSlide.query.get_or_404(slide_id)
+    form = HeroSlideForm()
+    
+    if form.validate_on_submit():
+        if form.image.data:
+            image_path = save_upload_file(form.image.data, "hero")
+            if image_path:
+                slide.image_path = image_path
+        
+        slide.title = form.title.data
+        slide.subtitle = form.subtitle.data
+        slide.order = form.order.data or 0
+        slide.is_active = form.is_active.data
+        
+        db.session.commit()
+        flash('Hero slide updated successfully!', 'success')
+        return redirect(url_for('admin.hero_slides_list'))
+    
+    # Pre-fill form
+    form.title.data = slide.title
+    form.subtitle.data = slide.subtitle
+    form.order.data = slide.order
+    form.is_active.data = slide.is_active
+    
+    return render_template('admin/hero_slides/form.html', 
+                         form=form, 
+                         action='Edit', 
+                         slide=slide)
+
+
+@admin_bp.route('/hero-slides/<int:slide_id>/delete', methods=['POST'])
+@admin_required
+def hero_slide_delete(slide_id):
+    slide = HeroSlide.query.get_or_404(slide_id)
+    
+    # Delete physical image file if it exists
+    if slide.image_path:
+        try:
+            # Remove leading slash if present
+            file_path = slide.image_path.lstrip('/')
+            full_path = os.path.join(current_app.root_path, file_path)
+            
+            if os.path.exists(full_path):
+                os.remove(full_path)
+                print(f"Deleted image file: {full_path}")
+        except Exception as e:
+            print(f"Warning: Could not delete image file: {e}")
+            # Continue anyway - we still want to delete the DB record
+    
+    # Delete from database
+    db.session.delete(slide)
+    db.session.commit()
+    
+    flash('Hero slide and associated image deleted successfully.', 'success')
+    return redirect(url_for('admin.hero_slides_list'))
+
+
+# ==================== ADMIN REGISTRATION ====================
+
+@admin_bp.route('/register', methods=['GET', 'POST'])
+@admin_required
+def register_admin():
+    form = AdminRegisterForm()
+    
+    if form.validate_on_submit():
+        email = form.email.data.lower()
+        
+        user = User(
+            username=form.username.data.strip(),
+            email=email,
+            is_admin=True,
+            is_active=False
+        )
+        token = user.generate_activation_token()
+        
+        db.session.add(user)
+        db.session.commit()
+
+        send_activation_email(user, token)
+        
+        flash(f'Invitation sent to {email}. They will receive an email to set their password.', 'success')
+        return redirect(url_for('admin.dashboard'))
+
+    return render_template('admin/register.html', form=form)
+
+
+# ============ ADMIN USER MANAGEMENT ============
+
+@admin_bp.route('/admins')
+@admin_required
+def admins_list():
+    """List all admins except current user"""
+    admins = User.query.filter(
+        User.id != current_user.id,
+        User.is_admin == True
+    ).order_by(User.created_at.desc()).all()
+    
+    return render_template('admin/admins/list.html', admins=admins)
+
+@admin_bp.route('/admins/create', methods=['GET', 'POST'])
+@admin_required
+def admin_create():
+    form = AdminRegisterForm()
+
+    print("Request method:", request.method)
+
+    if form.validate_on_submit():
+        print("Form validated")
+
+        try:
+            print("Creating user...")
+
+            user = User(
+                username=form.username.data.strip(),
+                email=form.email.data.strip().lower(),
+                is_admin=True,
+                is_active=False
+            )
+
+            token = user.generate_activation_token()
+
+            db.session.add(user)
+            db.session.commit()
+
+            print("User saved")
+
+            send_activation_email(user, token)
+
+            print("Email sent")
+
+            flash(
+                f'New admin account created and invitation sent to {user.email}',
+                'success'
+            )
+
+            return redirect(url_for('admin.admins_list'))
+
+        except Exception as e:
+            db.session.rollback()
+            print("ERROR:", str(e))
+            flash(str(e), 'danger')
+
+    else:
+        print("Form errors:", form.errors)
+
+    return render_template(
+        'admin/admins/form.html',
+        form=form,
+        action='Create'
+    )
+
+
+@admin_bp.route('/admins/<int:user_id>/edit', methods=['GET', 'POST'])
+@admin_required
+def admin_edit(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.id == current_user.id:
+        flash("You cannot edit your own account here.", "warning")
+        return redirect(url_for('admin.admins_list'))
+    
+    form = AdminRegisterForm()
+    
+    if form.validate_on_submit():
+        user.username = form.username.data.strip()
+        user.email = form.email.data.strip().lower()
+        # Note: Password is not changed here (use reset instead)
+        
+        db.session.commit()
+        flash('Admin updated successfully!', 'success')
+        return redirect(url_for('admin.admins_list'))
+    
+    # Pre-fill
+    form.username.data = user.username
+    form.email.data = user.email
+    
+    return render_template('admin/admins/form.html', form=form, action='Edit', user=user)
+
+
+@admin_bp.route('/admins/<int:user_id>/delete', methods=['POST'])
+@admin_required
+def admin_delete(user_id):
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({
+            "success": False,
+            "message": "User not found."
+        }), 404
+
+    if user.id == current_user.id:
+        return jsonify({
+            "success": False,
+            "message": "You cannot delete your own account!"
+        }), 400
+
+    db.session.delete(user)
+    db.session.commit()
+
+    return jsonify({
+        "success": True,
+        "message": "Admin account deleted successfully."
+    }), 200
+
+
+# ====================    ====================
+@admin_bp.route('/testimonials/links')
+@admin_required
+def testimonial_links():
+    submissions = TestimonialSubmission.query.order_by(TestimonialSubmission.created_at.desc()).all()
+    now = datetime.now()
+    for submission in submissions:
+        if submission.expires_at and submission.expires_at < now:
+            submission.is_expired = True
+        else:
+            submission.is_expired = False
+    return render_template('admin/testimonials/links.html', submissions=submissions, now=now)
+
+@admin_bp.route('/testimonials/generate-link', methods=['GET', 'POST'])
+@admin_required
+def generate_testimonial_link():
+    form = TestimonialLinkForm()
+    
+    if form.validate_on_submit():
+        token = secrets.token_urlsafe(32)
+        expires_at = datetime.utcnow() + timedelta(days=form.expires_in_days.data)
+        
+        submission = TestimonialSubmission(
+            token=token,
+            client_name=form.client_name.data,
+            client_company=form.client_company.data,
+            email=form.email.data,
+            expires_at=expires_at
+        )
+        db.session.add(submission)
+        db.session.commit()
+
+        submission_url = url_for('public.submit_testimonial', token=token, _external=True)
+        
+        # Pass calculated days remaining
+        days_remaining = form.expires_in_days.data
+        
+        send_testimonial_invite_email(submission, submission_url, days_remaining)
+        
+        flash('Testimonial link generated and sent successfully!', 'success')
+        return redirect(url_for('admin.testimonial_links'))
+    
+    return render_template('admin/testimonials/generate_link.html', form=form)
+
+
+@admin_bp.route('/testimonials/links/<int:sub_id>/resend', methods=['POST'])
+@admin_required
+def resend_testimonial_link(sub_id):
+    submission = TestimonialSubmission.query.get_or_404(sub_id)
+    
+    if submission.is_used:
+        return jsonify({'success': False, 'message': 'This link has already been used.'})
+    
+    # Regenerate token and extend expiry by 7 days
+    submission.token = secrets.token_urlsafe(32)
+    submission.expires_at = datetime.utcnow() + timedelta(days=7)
+    db.session.commit()
+    
+    submission_url = url_for('public.submit_testimonial', token=submission.token, _external=True)
+    
+    send_testimonial_invite_email(submission, submission_url)
+    
+    return jsonify({
+        'success': True, 
+        'message': 'Testimonial link has been resent successfully!'
+    })
+
+@admin_bp.route('/testimonials/links/<int:sub_id>/delete', methods=['POST'])
+@admin_required
+def testimonial_link_delete(sub_id):
+    """Delete a testimonial submission link"""
+    submission = TestimonialSubmission.query.get_or_404(sub_id)
+    
+    db.session.delete(submission)
+    db.session.commit()
+    
+    flash('Testimonial submission link deleted successfully.', 'success')
+    return redirect(url_for('admin.testimonial_links'))

@@ -1,0 +1,12 @@
+{% extends "emails/email_base.html" %}
+
+{% block title %}Activate Your Admin Account{% endblock %}
+
+{% block content %}
+    <h3>Welcome to John & Eniola Consultancy Admin Portal</h3>
+    <p>Your account has been created. Please click the button below to set your password and activate your account.</p>
+    
+    <a href="{{ activation_url }}" class="button">Activate Account & Set Password</a>
+    
+    <p><small>This link expires in 24 hours.</small></p>
+{% endblock %}
