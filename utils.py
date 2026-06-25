@@ -19,12 +19,12 @@ def send_newsletter_email(subject: str, html_content: str, recipient: str, googl
                                    recipient_email=recipient)
 
         mail.send(msg)
-        print(f"✅ Newsletter sent to {recipient}")
+        print(f"Newsletter sent to {recipient}")
         return True
         
     except Exception as e:
         current_app.logger.error(f"Failed to send newsletter to {recipient}: {e}")
-        print(f"❌ Failed to send newsletter to {recipient}: {e}")
+        print(f"Failed to send newsletter to {recipient}: {e}")
         return False
 
 
@@ -46,12 +46,12 @@ def send_activation_email(user, token):
         )
 
         mail.send(msg)
-        print(f"✅ Activation email sent to {user.email}")
+        print(f"Activation email sent to {user.email}")
         return True
 
     except Exception as e:
         current_app.logger.error(f"Activation email failed for {user.email}: {e}")
-        print(f"❌ Activation email failed: {e}")
+        print(f"Activation email failed: {e}")
         return False
 
 
@@ -73,15 +73,15 @@ def send_password_reset_email(user, token):
         )
 
         mail.send(msg)
-        print(f"✅ Password reset email sent to {user.email}")
+        print(f"Password reset email sent to {user.email}")
         return True
 
     except Exception as e:
         current_app.logger.error(f"Password reset email failed for {user.email}: {e}")
-        print(f"❌ Password reset email failed: {e}")
+        print(f"Password reset email failed: {e}")
         return False
- 
-    
+
+
 def send_testimonial_invite_email(submission, submission_url, days_remaining=7):
     """Send testimonial submission invitation"""
     try:
@@ -99,9 +99,9 @@ def send_testimonial_invite_email(submission, submission_url, days_remaining=7):
         )
         
         mail.send(msg)
-        print(f"✅ Testimonial invite sent to {submission.email}")
+        print(f"Testimonial invite sent to {submission.email}")
         return True
     except Exception as e:
         current_app.logger.error(f"Failed to send testimonial invite to {submission.email}: {e}")
-        print(f"❌ Failed to send testimonial invite: {e}")
+        print(f"Failed to send testimonial invite: {e}")
         return False

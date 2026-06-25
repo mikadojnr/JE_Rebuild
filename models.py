@@ -120,11 +120,10 @@ class Comment(db.Model):
     
     # Self-referential relationship for replies
     replies = db.relationship(
-    'Comment',
-    backref=db.backref('parent', remote_side=[id]),
-    lazy=True,
-    primaryjoin="and_(Comment.parent_id==Comment.id, Comment.is_approved==True)"
-)
+        'Comment',
+        backref=db.backref('parent', remote_side=[id]),
+        lazy=True
+    )
 
    
 class TestimonialSubmission(db.Model):
