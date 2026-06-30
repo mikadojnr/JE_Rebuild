@@ -126,6 +126,114 @@ def test_email():
     except Exception as e:
         return f"Error: {str(e)}"
 
+@public_bp.route('/robots.txt')
+def robots_txt():
+    """Robots.txt for SEO"""
+    site_url = request.url_root.rstrip('/')
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin/",
+        "Disallow: /login",
+        "Disallow: /register",
+        "Disallow: /activate/",
+        "Disallow: /reset-password/",
+        "Disallow: /forgot-password",
+        "Disallow: /unsubscribe",
+        "Disallow: /submit-testimonial/",
+        "Disallow: /comment/manage/",
+        f"Sitemap: {site_url}/sitemap.xml",
+        f"Host: {request.host}",
+    ]
+    return '\n'.join(lines), 200, {'Content-Type': 'text/plain'}
+
+
+@public_bp.route('/sitemap.xml')
+def sitemap_xml():
+    """XML Sitemap"""
+    from xml.etree.ElementTree import Element, tostring
+    from xml.dom import minidom
+
+    site_url = request.url_root.rstrip('/')
+
+    urlset = Element('urlset')
+    urlset.set('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9')
+
+    static_pages = [
+        ('/', '1.00', 'daily'),
+        ('/about', '0.80', 'monthly'),
+        ('/services', '0.90', 'weekly'),
+        ('/insights', '0.90', 'weekly'),
+        ('/newsletters', '0.70', 'weekly'),
+        ('/contact', '0.80', 'monthly'),
+    ]
+    for path, priority, changefreq in static_pages:
+        url = Element('url')
+        loc = Element('loc')
+        loc.text = f'{site_url}{path}'
+        url.append(loc)
+        prio = Element('priority')
+        prio.text = priority
+        url.append(prio)
+        cf = Element('changefreq')
+        cf.text = changefreq
+        url.append(cf)
+        urlset.append(url)
+
+    posts = BlogPost.query.filter_by(is_published=True).order_by(BlogPost.published_at.desc()).all()
+    for post in posts:
+        url = Element('url')
+        loc = Element('loc')
+        loc.text = f'{site_url}/insights/{post.slug}'
+        url.append(loc)
+        lastmod = Element('lastmod')
+        lastmod.text = (post.updated_at or post.published_at or post.created_at).strftime('%Y-%m-%d')
+        url.append(lastmod)
+        prio = Element('priority')
+        prio.text = '0.80'
+        url.append(prio)
+        cf = Element('changefreq')
+        cf.text = 'monthly'
+        url.append(cf)
+        urlset.append(url)
+
+    services = Service.query.filter_by(is_active=True).all()
+    for service in services:
+        url = Element('url')
+        loc = Element('loc')
+        loc.text = f'{site_url}/services#{service.slug}'
+        url.append(loc)
+        prio = Element('priority')
+        prio.text = '0.70'
+        url.append(prio)
+        cf = Element('changefreq')
+        cf.text = 'monthly'
+        url.append(cf)
+        urlset.append(url)
+
+    newsletters = Newsletter.query.filter_by(is_published=True).all()
+    for nl in newsletters:
+        url = Element('url')
+        loc = Element('loc')
+        loc.text = f'{site_url}/newsletter/{nl.slug}'
+        url.append(loc)
+        lastmod = Element('lastmod')
+        lastmod.text = (nl.updated_at or nl.published_at or nl.created_at).strftime('%Y-%m-%d')
+        url.append(lastmod)
+        prio = Element('priority')
+        prio.text = '0.60'
+        url.append(prio)
+        cf = Element('changefreq')
+        cf.text = 'monthly'
+        url.append(cf)
+        urlset.append(url)
+
+    rough_string = tostring(urlset, 'utf-8')
+    reparsed = minidom.parseString(rough_string)
+    xml = reparsed.toprettyxml(indent="  ")
+    return xml, 200, {'Content-Type': 'application/xml'}
+
+
 @public_bp.route('/')
 def home():
     
@@ -167,6 +275,58 @@ def insights():
     ).paginate(page=page, per_page=9)
     
     return render_template('public/insights.html', posts=posts)
+
+
+@public_bp.route('/search')
+def search():
+    """Search across blog posts, services, and newsletters"""
+    q = request.args.get('q', '').strip()
+    results = {'posts': [], 'services': [], 'newsletters': []}
+    total = 0
+
+    if q:
+        term = f'%{q}%'
+
+        # Blog posts (published only)
+        posts = BlogPost.query.filter(
+            BlogPost.is_published == True,
+            db.or_(
+                BlogPost.title.ilike(term),
+                BlogPost.content.ilike(term),
+                BlogPost.excerpt.ilike(term),
+                BlogPost.category.ilike(term),
+                BlogPost.author_name.ilike(term),
+                BlogPost.meta_description.ilike(term),
+            )
+        ).order_by(desc(BlogPost.published_at)).limit(10).all()
+        results['posts'] = posts
+        total += len(posts)
+
+        # Services (active only)
+        services = Service.query.filter(
+            Service.is_active == True,
+            db.or_(
+                Service.title.ilike(term),
+                Service.description.ilike(term),
+                Service.excerpt.ilike(term),
+            )
+        ).order_by(Service.order).limit(5).all()
+        results['services'] = services
+        total += len(services)
+
+        # Newsletters (published only)
+        newsletters = Newsletter.query.filter(
+            Newsletter.is_published == True,
+            db.or_(
+                Newsletter.title.ilike(term),
+                Newsletter.excerpt.ilike(term),
+            )
+        ).order_by(desc(Newsletter.published_at)).limit(5).all()
+        results['newsletters'] = newsletters
+        total += len(newsletters)
+
+    return render_template('public/search.html', q=q, results=results, total=total)
+
 
 @public_bp.route('/insights/<string:slug>', methods=['GET', 'POST'])
 def blog_detail(slug):

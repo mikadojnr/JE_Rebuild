@@ -2,7 +2,7 @@
 {% block page_title %}Services{% endblock %}
 {% block content %}
 <div class="flex justify-end items-center mb-8">
-    <a href="{{ url_for('admin.service_create') }}" class="bg-[#141495] text-white px-6 py-3 rounded">➕ Add Service</a>
+    <a href="{{ url_for('admin.service_create') }}" class="bg-[#141495] text-white px-6 py-3 rounded"><i class="fa-solid fa-plus"></i> Add Service</a>
 </div>
 {% if services %}
 <div class="bg-white rounded-lg shadow overflow-x-auto">

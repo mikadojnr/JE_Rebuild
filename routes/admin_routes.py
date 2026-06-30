@@ -5,8 +5,6 @@ Admin Routes for John & Eniola Consultancy Dashboard
 import secrets
 from urllib.parse import urljoin, urlparse
 
-from urllib.parse import urljoin
-
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, current_app, flash
 from flask_login import login_required, login_user, logout_user, current_user
 from werkzeug.utils import secure_filename
@@ -20,7 +18,7 @@ from models import (
 )
 from forms import (
     AdminRegisterForm, HeroSlideForm, LoginForm, BlogPostForm, NewsletterForm, ServiceForm, TeamMemberForm, 
-    TestimonialForm, SiteSettingsForm, NewsletterCampaignForm, CreateUserForm, TestimonialLinkForm
+    TestimonialForm, SiteSettingsForm, NewsletterCampaignForm, TestimonialLinkForm
 )
 from app import db, mail
 from flask_mail import Message
@@ -118,32 +116,7 @@ def upload_media():
         "location": filepath
     })
 
-@admin_bp.route('/register', methods=['GET', 'POST'])
-# @login_required
-# @admin_required
-def register():
-    """Create New Admin User"""
-    
-    form = CreateUserForm()
 
-    if form.validate_on_submit():
-
-        user = User(
-            username=form.username.data.strip(),
-            email=form.email.data.strip().lower(),
-            is_admin=True
-        )
-
-        user.set_password(form.password.data)
-
-        db.session.add(user)
-        db.session.commit()
-
-        flash('Admin user created successfully.', 'success')
-
-        return redirect(url_for('admin.dashboard'))
-
-    return render_template('admin/register.html', form=form)
 
 
 @admin_bp.route('/login', methods=['GET', 'POST'])
@@ -184,16 +157,159 @@ def logout():
 @admin_required
 def dashboard():
     """Admin Dashboard"""
+    now = datetime.utcnow()
+    thirty_days_ago = now - timedelta(days=30)
+
+    total_posts = BlogPost.query.count()
+    published_posts = BlogPost.query.filter_by(is_published=True).count()
+    draft_posts = total_posts - published_posts
+
+    total_newsletters = Newsletter.query.count()
+    published_newsletters = Newsletter.query.filter_by(is_published=True).count()
+    sent_campaigns = NewsletterCampaign.query.filter_by(is_sent=True).count()
+
+    all_subscribers = Subscriber.query.count()
+    active_subscribers = Subscriber.query.filter_by(is_active=True).count()
+    recent_subscribers = Subscriber.query.filter(
+        Subscriber.created_at >= thirty_days_ago
+    ).count()
+
+    total_comments = Comment.query.count()
+    approved_comments = Comment.query.filter_by(is_approved=True).count()
+    pending_comments = total_comments - approved_comments
+
     stats = {
-        'total_posts': BlogPost.query.count(),
+        'total_posts': total_posts,
+        'published_posts': published_posts,
+        'draft_posts': draft_posts,
         'total_services': Service.query.count(),
         'total_team': TeamMember.query.count(),
-        'total_subscribers': Subscriber.query.count(),
-        'total_comments': Comment.query.count(),
-        'pending_comments': Comment.query.filter_by(is_approved=False).count()
+        'total_subscribers': all_subscribers,
+        'active_subscribers': active_subscribers,
+        'recent_subscribers': recent_subscribers,
+        'total_comments': total_comments,
+        'approved_comments': approved_comments,
+        'pending_comments': pending_comments,
+        'total_testimonials': Testimonial.query.count(),
+        'active_testimonials': Testimonial.query.filter_by(is_active=True).count(),
+        'total_hero_slides': HeroSlide.query.count(),
+        'active_hero_slides': HeroSlide.query.filter_by(is_active=True).count(),
+        'total_newsletters': total_newsletters,
+        'published_newsletters': published_newsletters,
+        'total_admins': User.query.filter_by(is_admin=True).count(),
+        'sent_campaigns': sent_campaigns,
+        'post_view_count': db.session.query(db.func.sum(BlogPost.view_count)).scalar() or 0,
     }
-    
-    return render_template('admin/dashboard.html', stats=stats)
+
+    recent_posts = BlogPost.query.order_by(BlogPost.created_at.desc()).limit(5).all()
+    recent_comments = Comment.query.order_by(Comment.created_at.desc()).limit(5).all()
+    recent_subscribers_list = Subscriber.query.order_by(Subscriber.created_at.desc()).limit(5).all()
+    recent_campaigns = NewsletterCampaign.query.order_by(NewsletterCampaign.sent_at.desc()).limit(5).all()
+
+    return render_template(
+        'admin/dashboard.html',
+        stats=stats,
+        recent_posts=recent_posts,
+        recent_comments=recent_comments,
+        recent_subscribers=recent_subscribers_list,
+        recent_campaigns=recent_campaigns
+    )
+
+
+@admin_bp.route('/analytics')
+@admin_required
+def analytics():
+    """Analytics Dashboard"""
+    from sqlalchemy import func, cast, Date
+
+    # Aggregate stats
+    total_posts = BlogPost.query.count()
+    total_services = Service.query.count()
+    total_subscribers = Subscriber.query.count()
+    total_comments = Comment.query.count()
+    total_newsletters = Newsletter.query.count()
+    total_testimonials = Testimonial.query.count()
+    total_team = TeamMember.query.count()
+    post_view_count = db.session.query(func.sum(BlogPost.view_count)).scalar() or 0
+
+    # Most viewed posts (top 10)
+    top_posts = BlogPost.query.order_by(BlogPost.view_count.desc()).limit(10).all()
+
+    # Posts by category
+    category_counts = db.session.query(
+        BlogPost.category, func.count(BlogPost.id)
+    ).filter(
+        BlogPost.category.isnot(None), BlogPost.category != ''
+    ).group_by(BlogPost.category).order_by(func.count(BlogPost.id).desc()).all()
+
+    # Subscriber growth (last 30 days, grouped by date)
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    subscriber_daily = db.session.query(
+        cast(Subscriber.created_at, Date), func.count(Subscriber.id)
+    ).filter(
+        Subscriber.created_at >= thirty_days_ago
+    ).group_by(cast(Subscriber.created_at, Date)).order_by(cast(Subscriber.created_at, Date)).all()
+
+    # Comments trend (last 30 days)
+    comment_daily = db.session.query(
+        cast(Comment.created_at, Date), func.count(Comment.id)
+    ).filter(
+        Comment.created_at >= thirty_days_ago
+    ).group_by(cast(Comment.created_at, Date)).order_by(cast(Comment.created_at, Date)).all()
+
+    # Posts published trend (last 12 months)
+    twelve_months_ago = datetime.utcnow() - timedelta(days=365)
+    post_monthly = db.session.query(
+        func.date_format(BlogPost.created_at, '%%Y-%%m').label('month'),
+        func.count(BlogPost.id)
+    ).filter(
+        BlogPost.created_at >= twelve_months_ago
+    ).group_by('month').order_by('month').all()
+
+    # Published vs Draft ratio
+    published_count = BlogPost.query.filter_by(is_published=True).count()
+    draft_count = total_posts - published_count
+
+    # Active vs Inactive services
+    active_services = Service.query.filter_by(is_active=True).count()
+    inactive_services = total_services - active_services
+
+    # Subscriber active/inactive
+    active_subs = Subscriber.query.filter_by(is_active=True).count()
+    inactive_subs = total_subscribers - active_subs
+
+    # Comment approval ratio
+    approved_comments = Comment.query.filter_by(is_approved=True).count()
+    pending_comments = total_comments - approved_comments
+
+    # Newsletter sent count
+    sent_newsletters = NewsletterCampaign.query.filter_by(is_sent=True).count()
+
+    return render_template(
+        'admin/analytics.html',
+        top_posts=top_posts,
+        category_counts=category_counts,
+        subscriber_daily=subscriber_daily,
+        comment_daily=comment_daily,
+        post_monthly=post_monthly,
+        total_posts=total_posts,
+        total_services=total_services,
+        total_subscribers=total_subscribers,
+        total_comments=total_comments,
+        total_newsletters=total_newsletters,
+        total_testimonials=total_testimonials,
+        total_team=total_team,
+        post_view_count=post_view_count,
+        published_count=published_count,
+        draft_count=draft_count,
+        active_services=active_services,
+        inactive_services=inactive_services,
+        active_subs=active_subs,
+        inactive_subs=inactive_subs,
+        approved_comments=approved_comments,
+        pending_comments=pending_comments,
+        sent_newsletters=sent_newsletters,
+    )
 
 
 # ============ BLOG POST MANAGEMENT ============
@@ -203,8 +319,32 @@ def dashboard():
 def blog_list():
     """List all blog posts"""
     page = request.args.get('page', 1, type=int)
-    posts = BlogPost.query.order_by(BlogPost.created_at.desc()).paginate(page=page, per_page=20)
-    return render_template('admin/blog/list.html', posts=posts)
+    search = request.args.get('search', '').strip()
+    status_filter = request.args.get('status', '').strip()
+    category_filter = request.args.get('category', '').strip()
+
+    query = BlogPost.query
+
+    if search:
+        query = query.filter(
+            db.or_(
+                BlogPost.title.ilike(f'%{search}%'),
+                BlogPost.author_name.ilike(f'%{search}%'),
+                BlogPost.category.ilike(f'%{search}%')
+            )
+        )
+    if status_filter == 'published':
+        query = query.filter(BlogPost.is_published == True)
+    elif status_filter == 'draft':
+        query = query.filter(BlogPost.is_published == False)
+    if category_filter:
+        query = query.filter(BlogPost.category.ilike(f'%{category_filter}%'))
+
+    posts = query.order_by(BlogPost.created_at.desc()).paginate(page=page, per_page=20)
+
+    categories = [row[0] for row in db.session.query(BlogPost.category).distinct().all() if row[0]]
+
+    return render_template('admin/blog/list.html', posts=posts, search=search, status_filter=status_filter, category_filter=category_filter, categories=categories)
 
 
 @admin_bp.route('/blog/create', methods=['GET', 'POST'])
@@ -220,15 +360,24 @@ def blog_create():
         
         tags = [tag.strip() for tag in form.tags.data.split(',')] if form.tags.data else []
         
+        author_name = form.author_name.data or current_user.full_name or 'John & Eniola Team'
+
+        # Calculate reading time (~200 words per minute)
+        word_count = len(form.content.data.split())
+        reading_time = max(1, round(word_count / 200))
+        
         post = BlogPost(
             title=form.title.data,
             slug=form.slug.data,
             excerpt=form.excerpt.data,
             content=form.content.data,
             featured_image=featured_image_path,
-            author_name=form.author_name.data or 'John & Eniola Team',
+            author_name=author_name,
             category=form.category.data or 'Insights',
             tags=tags,
+            meta_description=form.meta_description.data,
+            is_featured=form.is_featured.data,
+            reading_time=reading_time,
             is_published=form.is_published.data,
             published_at=datetime.utcnow() if form.is_published.data else None
         )
@@ -239,6 +388,8 @@ def blog_create():
         flash('Blog post created successfully!', 'success')
         return redirect(url_for('admin.blog_list'))
     
+    if not form.author_name.data:
+        form.author_name.data = current_user.full_name
     return render_template('admin/blog/form.html', form=form, action='Create')
 
 
@@ -261,6 +412,12 @@ def blog_edit(post_id):
         post.author_name = form.author_name.data or 'John & Eniola Team'
         post.category = form.category.data or 'Insights'
         post.is_published = form.is_published.data
+        post.meta_description = form.meta_description.data
+        post.is_featured = form.is_featured.data
+        
+        # Recalculate reading time
+        word_count = len(form.content.data.split())
+        post.reading_time = max(1, round(word_count / 200))
         
         if form.tags.data:
             post.tags = [tag.strip() for tag in form.tags.data.split(',')]
@@ -280,6 +437,8 @@ def blog_edit(post_id):
         form.author_name.data = post.author_name
         form.category.data = post.category
         form.tags.data = ', '.join(post.tags) if post.tags else ''
+        form.meta_description.data = post.meta_description
+        form.is_featured.data = post.is_featured
         form.is_published.data = post.is_published
     
     return render_template('admin/blog/form.html', form=form, action='Edit', post=post)
@@ -304,6 +463,40 @@ def blog_delete(post_id):
     flash('Blog post deleted successfully!', 'success')
     return redirect(url_for('admin.blog_list'))
 
+
+@admin_bp.route('/blog/bulk-action', methods=['POST'])
+@admin_required
+def blog_bulk_action():
+    """Bulk actions on blog posts (publish, unpublish, delete)"""
+    action = request.form.get('action')
+    post_ids = request.form.getlist('post_ids[]')
+
+    if not action or not post_ids:
+        flash('No posts selected or no action specified.', 'warning')
+        return redirect(url_for('admin.blog_list'))
+
+    posts = BlogPost.query.filter(BlogPost.id.in_(post_ids)).all()
+
+    if action == 'publish':
+        now = datetime.utcnow()
+        for post in posts:
+            post.is_published = True
+            if not post.published_at:
+                post.published_at = now
+        flash(f'{len(posts)} post(s) published.', 'success')
+    elif action == 'unpublish':
+        for post in posts:
+            post.is_published = False
+        flash(f'{len(posts)} post(s) unpublished.', 'success')
+    elif action == 'delete':
+        for post in posts:
+            db.session.delete(post)
+        flash(f'{len(posts)} post(s) deleted.', 'success')
+    else:
+        flash('Unknown action.', 'danger')
+
+    db.session.commit()
+    return redirect(url_for('admin.blog_list'))
 
 # ============ SERVICE MANAGEMENT ============
 
@@ -568,24 +761,7 @@ def testimonial_edit(testimonial_id):
     return render_template('admin/testimonials/form.html', form=form, action='Edit', testimonial=testimonial)
 
 
-# @admin_bp.route('/testimonials/<int:testimonial_id>/delete', methods=['POST'])
-# @admin_required
-# def testimonial_delete(testimonial_id):
-#     """Delete testimonial"""
-#     testimonial = Testimonial.query.get_or_404(testimonial_id)
-    
-#     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-#         try:
-#             db.session.delete(testimonial)
-#             db.session.commit()
-#             return jsonify({'success': True, 'message': 'Testimonial deleted.'}), 200
-#         except Exception as e:
-#             return jsonify({'success': False, 'message': str(e)}), 400
-    
-#     db.session.delete(testimonial)
-#     db.session.commit()
-#     flash('Testimonial deleted successfully!', 'success')
-#     return redirect(url_for('admin.testimonials_list'))
+
 
 
 # ============ COMMENTS MANAGEMENT ============
@@ -606,7 +782,7 @@ def comments_list():
 
 
 @admin_bp.route('/comments/<int:comment_id>/approve', methods=['POST'])
-# @admin_required
+@admin_required
 def comment_approve(comment_id):
     """Approve a comment"""
     comment = Comment.query.get_or_404(comment_id)
@@ -621,7 +797,7 @@ def comment_approve(comment_id):
 
 
 @admin_bp.route('/comments/<int:comment_id>/delete', methods=['POST'])
-# @admin_required
+@admin_required
 def comment_delete(comment_id):
     """Delete a comment"""
     comment = Comment.query.get_or_404(comment_id)
@@ -643,7 +819,7 @@ def comment_delete(comment_id):
 # ============ SITE SETTINGS ============
 
 @admin_bp.route('/settings', methods=['GET', 'POST'])
-# @admin_required
+@admin_required
 def site_settings():
     """Edit global site settings"""
     settings = SiteSettings.query.first()
@@ -673,6 +849,19 @@ def site_settings():
             if logo_dark_path:
                 settings.logo_dark_image_path = logo_dark_path
         
+        # Hero section
+        settings.hero_title = form.hero_title.data
+        settings.hero_subtitle = form.hero_subtitle.data
+        settings.hero_btn_text = form.hero_btn_text.data
+        settings.hero_btn_url = form.hero_btn_url.data
+
+        # SEO fields
+        settings.meta_title = form.meta_title.data
+        settings.meta_description = form.meta_description.data
+        settings.og_image = form.og_image.data
+        settings.google_analytics_id = form.google_analytics_id.data
+        settings.google_tag_manager_id = form.google_tag_manager_id.data
+
         # Handle social links
         social_links = {}
         if form.twitter.data:
@@ -700,7 +889,19 @@ def site_settings():
         form.phone_secondary.data = settings.phone_secondary
         form.email.data = settings.email
         form.address.data = settings.address
-        
+
+        form.hero_title.data = settings.hero_title
+        form.hero_subtitle.data = settings.hero_subtitle
+        form.hero_btn_text.data = settings.hero_btn_text
+        form.hero_btn_url.data = settings.hero_btn_url
+
+        # Load SEO fields
+        form.meta_title.data = settings.meta_title
+        form.meta_description.data = settings.meta_description
+        form.og_image.data = settings.og_image
+        form.google_analytics_id.data = settings.google_analytics_id
+        form.google_tag_manager_id.data = settings.google_tag_manager_id
+
         if settings.social_links:
             form.twitter.data = settings.social_links.get('twitter')
             form.facebook.data = settings.social_links.get('facebook')
@@ -756,9 +957,7 @@ def newsletter_edit(nl_id):
         newsletter.title = form.title.data
         newsletter.slug = form.slug.data
         newsletter.excerpt = form.excerpt.data
-        newsletter.content = form.content.data
         newsletter.google_drive_link = form.google_drive_link.data
-        newsletter.pdf_url = form.pdf_url.data
         newsletter.is_published = form.is_published.data
 
         if form.is_published.data and not newsletter.published_at:
@@ -772,9 +971,7 @@ def newsletter_edit(nl_id):
     form.title.data = newsletter.title
     form.slug.data = newsletter.slug
     form.excerpt.data = newsletter.excerpt
-    form.content.data = newsletter.content
     form.google_drive_link.data = newsletter.google_drive_link
-    form.pdf_url.data = newsletter.pdf_url
     form.is_published.data = newsletter.is_published
 
     return render_template('admin/newsletter/form.html', form=form, action='Edit', newsletter=newsletter)
@@ -807,12 +1004,16 @@ def newsletter_send():
             flash('No active subscribers found.', 'warning')
             return redirect(url_for('admin.newsletter_send'))
 
+        newsletter_url = url_for('public.newsletter_detail', slug=newsletter.slug, _external=True)
+
         success_count = 0
         for sub in subscribers:
-            if send_newsletter_email(form.subject.data or newsletter.title, 
-                                   newsletter.excerpt, 
-                                   sub.email, 
-                                   newsletter.google_drive_link):
+            if send_newsletter_email(
+                form.subject.data or newsletter.title,
+                newsletter.excerpt or '',
+                sub.email,
+                newsletter_url
+            ):
                 success_count += 1
 
         # Record campaign
@@ -842,9 +1043,16 @@ def newsletter_quick_send(nl_id):
     if not subscribers:
         return jsonify({'success': False, 'message': 'No active subscribers'}), 400
 
+    newsletter_url = url_for('public.newsletter_detail', slug=newsletter.slug, _external=True)
+
     success_count = 0
     for sub in subscribers:
-        if send_newsletter_email(newsletter.title, newsletter.excerpt, sub.email, newsletter.google_drive_link):
+        if send_newsletter_email(
+            newsletter.title,
+            newsletter.excerpt or '',
+            sub.email,
+            newsletter_url
+        ):
             success_count += 1
 
     campaign = NewsletterCampaign(
@@ -870,7 +1078,7 @@ def newsletter_sent():
     return render_template('admin/newsletter/sent.html', campaigns=campaigns)
 
 @admin_bp.route('/subscribers')
-# @admin_required
+@admin_required
 def subscribers_list():
     """List all subscribers"""
     page = request.args.get('page', 1, type=int)
@@ -879,7 +1087,7 @@ def subscribers_list():
 
 
 @admin_bp.route('/subscribers/<int:subscriber_id>/delete', methods=['POST'])
-# @admin_required
+@admin_required
 def subscriber_delete(subscriber_id):
     """Delete subscriber"""
     subscriber = Subscriber.query.get_or_404(subscriber_id)
@@ -938,6 +1146,9 @@ def hero_slide_create():
         slide = HeroSlide(
             title=form.title.data,
             subtitle=form.subtitle.data,
+            btn_text=form.btn_text.data,
+            btn_url=form.btn_url.data,
+            alt_text=form.alt_text.data,
             image_path=image_path,
             order=form.order.data or 0,
             is_active=form.is_active.data
@@ -965,6 +1176,9 @@ def hero_slide_edit(slide_id):
         
         slide.title = form.title.data
         slide.subtitle = form.subtitle.data
+        slide.btn_text = form.btn_text.data
+        slide.btn_url = form.btn_url.data
+        slide.alt_text = form.alt_text.data
         slide.order = form.order.data or 0
         slide.is_active = form.is_active.data
         
@@ -975,6 +1189,9 @@ def hero_slide_edit(slide_id):
     # Pre-fill form
     form.title.data = slide.title
     form.subtitle.data = slide.subtitle
+    form.btn_text.data = slide.btn_text
+    form.btn_url.data = slide.btn_url
+    form.alt_text.data = slide.alt_text
     form.order.data = slide.order
     form.is_active.data = slide.is_active
     
@@ -1023,6 +1240,8 @@ def register_admin():
         
         user = User(
             username=form.username.data.strip(),
+            first_name=form.first_name.data.strip() if form.first_name.data else '',
+            last_name=form.last_name.data.strip() if form.last_name.data else '',
             email=email,
             is_admin=True,
             is_active=False
@@ -1068,6 +1287,8 @@ def admin_create():
 
             user = User(
                 username=form.username.data.strip(),
+                first_name=form.first_name.data.strip() if form.first_name.data else '',
+                last_name=form.last_name.data.strip() if form.last_name.data else '',
                 email=form.email.data.strip().lower(),
                 is_admin=True,
                 is_active=False
@@ -1118,8 +1339,9 @@ def admin_edit(user_id):
     
     if form.validate_on_submit():
         user.username = form.username.data.strip()
+        user.first_name = form.first_name.data.strip() if form.first_name.data else ''
+        user.last_name = form.last_name.data.strip() if form.last_name.data else ''
         user.email = form.email.data.strip().lower()
-        # Note: Password is not changed here (use reset instead)
         
         db.session.commit()
         flash('Admin updated successfully!', 'success')
@@ -1127,6 +1349,8 @@ def admin_edit(user_id):
     
     # Pre-fill
     form.username.data = user.username
+    form.first_name.data = user.first_name
+    form.last_name.data = user.last_name
     form.email.data = user.email
     
     return render_template('admin/admins/form.html', form=form, action='Edit', user=user)

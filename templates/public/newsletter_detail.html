@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}{{ newsletter.title }} - John & Eniola Consultancy{% endblock %}
+{% block meta %}
+<meta property="og:title" content="{{ newsletter.title }} - {{ site_settings.company_name if site_settings else 'John & Eniola Consultancy' }}">
+<meta property="og:description" content="{{ newsletter.excerpt or newsletter.title }}">
+<meta property="og:image" content="{{ newsletter.featured_image or (request.url_root.rstrip('/') + '/static/images/og-default.jpg') }}">
+<meta property="og:url" content="{{ request.url }}">
+<meta property="og:type" content="article">
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+
+{% block title %}{{ newsletter.title }} - {{ site_settings.company_name if site_settings else 'John & Eniola Consultancy' }}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -11,6 +20,13 @@
         margin: 2rem auto;
         display: block;
     }
+    .prose table {
+        width: 100%;
+        overflow-x: auto;
+    }
+    .prose iframe {
+        max-width: 100%;
+    }
 </style>
 {% endblock %}
 
@@ -19,8 +35,8 @@
 <section class="hero-section">
     <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="breadcrumb mb-6">
-            <a href="{{ url_for('public.home') }}">Home</a> / 
-            <a href="{{ url_for('public.newsletters') }}">Newsletters</a> / 
+            <a href="{{ url_for('public.home') }}">Home</a> /
+            <a href="{{ url_for('public.newsletters') }}">Newsletters</a> /
             {{ newsletter.title[:35] }}
         </div>
         <h1 class="text-5xl md:text-6xl font-bold mb-6">{{ newsletter.title }}</h1>
@@ -33,36 +49,120 @@
 <!-- Content -->
 <section class="py-20 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- PDF Embed Section -->
-        <div class="bg-gray-900 rounded-3xl overflow-hidden shadow-2xl mb-12">
-            <div class="bg-gray-800 px-6 py-4 text-white flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="text-2xl">📄</span>
-                    <span class="font-semibold">Full Newsletter PDF</span>
-                </div>
-            </div>
-            
-            {% if newsletter.google_drive_link %}
-            <iframe 
-                src="https://drive.google.com/file/d/{{ newsletter.google_drive_link.split('/d/')[1].split('/')[0] }}/preview" 
-                width="100%" 
-                height="720" 
-                allow="autoplay"
-                class="w-full border-0 bg-white">
-            </iframe>
-            {% elif newsletter.pdf_url %}
-            <iframe src="{{ newsletter.pdf_url }}" width="100%" height="720" class="w-full border-0 bg-white"></iframe>
-            {% endif %}
-        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <article class="lg:col-span-2">
+                {% if newsletter.featured_image %}
+                <img src="{{ newsletter.featured_image }}" alt="{{ newsletter.title }}" class="w-full rounded-xl mb-10 object-cover">
+                {% endif %}
 
-        <!-- Download Button -->
-        <div class="text-center">
-            <a href="{{ newsletter.pdf_url or newsletter.google_drive_link }}" 
-               target="_blank"
-               class="btn-primary hover:text-[#0f0f7a]">
-                <i class="fa fa-download"></i> Download Full PDF
-            </a>
+                {% if newsletter.excerpt %}
+                <div class="prose max-w-none mb-10 border-t pt-8">
+                    {{ newsletter.excerpt | safe }}
+                </div>
+                {% endif %}
+
+                <div class="mb-12 pb-12 border-b">
+                    <h4 class="font-semibold mb-4 text-gray-700">Share This Newsletter</h4>
+                    <div class="flex gap-4">
+                        <a href="https://twitter.com/intent/tweet?text={{ (newsletter.excerpt or newsletter.title)|urlencode }}&url={{ request.url|urlencode }}&via=JohnEniolaCons"
+                        target="_blank"
+                        class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center hover:opacity-90 transition">
+                            <i class="fa-brands fa-x-twitter"></i>
+                        </a>
+
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url|urlencode }}"
+                        target="_blank"
+                        class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:opacity-90 transition">
+                            <i class="fa-brands fa-facebook-f"></i>
+                        </a>
+
+                        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.url|urlencode }}"
+                        target="_blank"
+                        class="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center hover:opacity-90 transition">
+                            <i class="fa-brands fa-linkedin-in"></i>
+                        </a>
+
+                        <button onclick="copyNewsletterLink()"
+                        class="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 text-white flex items-center justify-center hover:opacity-90 transition"
+                        title="Copy link to share on Instagram">
+                            <i class="fa-brands fa-instagram"></i>
+                        </button>
+                    </div>
+                </div>
+
+                {% if newsletter.google_drive_link %}
+                <div class="bg-gray-900 rounded-2xl overflow-hidden shadow-lg">
+                    <div class="bg-gray-800 px-6 py-4 text-white flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl"><i class="fa-solid fa-file-lines"></i></span>
+                            <span class="font-semibold">Full Newsletter PDF</span>
+                        </div>
+                    </div>
+                    <iframe
+                        src="https://drive.google.com/file/d/{{ newsletter.google_drive_link.split('/d/')[1].split('/')[0] }}/preview"
+                        width="100%"
+                        height="600"
+                        allow="autoplay"
+                        class="w-full border-0 bg-white">
+                    </iframe>
+                </div>
+                {% endif %}
+            </article>
+
+            <aside class="lg:col-span-1">
+                <div class="card bg-[#141495] text-white sticky top-8">
+                    <h5 class="mb-4 text-lg font-semibold">Subscribe to Newsletter</h5>
+                    <form id="newsletter-form" class="space-y-3">
+                        {{ newsletter_form.hidden_tag() }}
+                        {{ newsletter_form.email(class="form-control bg-white text-[#141495] border-none", placeholder="Your email") }}
+                        <button type="submit" class="w-full btn-primary hover:text-[#141495]">Subscribe</button>
+                    </form>
+
+                    <hr class="my-8 border-white/20">
+
+                    <h5 class="mb-4 text-lg font-semibold">Follow Us</h5>
+                    {% include 'public/socials.html' %}
+                </div>
+            </aside>
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('newsletter-form')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const btn = this.querySelector('button[type="submit"]');
+    const originalText = btn.textContent;
+    btn.textContent = 'Subscribing...';
+    btn.disabled = true;
+
+    fetch('{{ url_for("public.newsletter_subscribe") }}', {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        alert(data.message);
+        if (data.success) this.reset();
+    })
+    .catch(() => alert('Error subscribing'))
+    .finally(() => {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    });
+});
+
+function copyNewsletterLink() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+        alert('Link copied! Share it on Instagram.');
+    }).catch(() => {
+        alert('Please copy the URL from the address bar to share on Instagram.');
+    });
+}
+</script>
 {% endblock %}

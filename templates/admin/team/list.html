@@ -2,7 +2,7 @@
 {% block page_title %}Team Members{% endblock %}
 {% block content %}
 <div class="flex justify-end items-center mb-8">
-    <a href="{{ url_for('admin.team_create') }}" class="bg-[#141495] text-white px-6 py-3 rounded">➕ Add Member</a>
+    <a href="{{ url_for('admin.team_create') }}" class="bg-[#141495] text-white px-6 py-3 rounded"><i class="fa-solid fa-plus"></i> Add Member</a>
 </div>
 {% if team %}
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

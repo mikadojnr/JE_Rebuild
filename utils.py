@@ -3,7 +3,7 @@ from flask_mail import Message
 from extensions import mail
 from flask import current_app, render_template, url_for
 
-def send_newsletter_email(subject: str, html_content: str, recipient: str, google_drive_link=None):
+def send_newsletter_email(subject: str, html_content: str, recipient: str, newsletter_url=None):
     """Send newsletter email"""
     try:
         msg = Message(
@@ -15,7 +15,7 @@ def send_newsletter_email(subject: str, html_content: str, recipient: str, googl
         msg.html = render_template('emails/newsletter.html',
                                    subject=subject,
                                    content=html_content,
-                                   google_drive_link=google_drive_link,
+                                   newsletter_url=newsletter_url,
                                    recipient_email=recipient)
 
         mail.send(msg)

@@ -28,6 +28,9 @@ class ContactForm(FlaskForm):
 class HeroSlideForm(FlaskForm):
     title = StringField('Slide Title', validators=[DataRequired(), Length(max=255)])
     subtitle = TextAreaField('Subtitle / Description')
+    btn_text = StringField('Button Text', validators=[Optional(), Length(max=100)])
+    btn_url = StringField('Button URL', validators=[Optional(), Length(max=500)])
+    alt_text = StringField('Image Alt Text (SEO)', validators=[Optional(), Length(max=500)])
     image = FileField('Hero Image', validators=[
         FileAllowed(['jpg', 'jpeg', 'png', 'webp'], 'Images only!')
     ])
@@ -40,9 +43,7 @@ class NewsletterForm(FlaskForm):
     title = StringField('Newsletter Title', validators=[DataRequired(), Length(max=255)])
     slug = StringField('Slug', validators=[DataRequired(), Length(max=255)])
     excerpt = TextAreaField('Excerpt')
-    # content = TextAreaField('Email Body / Description', validators=[DataRequired()])
     google_drive_link = URLField('Google Drive Link', validators=[DataRequired()])
-    # pdf_url = URLField('Direct PDF URL (Optional)')
     featured_image = FileField('Featured Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
     is_published = BooleanField('Publish on Website', default=True)
     submit = SubmitField('Save Newsletter')
@@ -74,7 +75,7 @@ class BlogPostForm(FlaskForm):
     """Create/Edit Blog Post"""
     title = StringField('Title', validators=[DataRequired(), Length(min=5, max=255)])
     slug = StringField('Slug', validators=[DataRequired(), Length(min=3, max=255)])
-    excerpt = StringField('Excerpt', validators=[Optional(), Length(max=500)])
+    excerpt = TextAreaField('Excerpt', validators=[Optional(), Length(max=500)])
     content = TextAreaField('Content', validators=[DataRequired(), Length(min=10)])
     featured_image = FileField('Featured Image', validators=[
         FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!')
@@ -82,6 +83,8 @@ class BlogPostForm(FlaskForm):
     author_name = StringField('Author Name', validators=[Optional(), Length(max=120)])
     category = StringField('Category', validators=[Optional(), Length(max=100)])
     tags = StringField('Tags (comma-separated)', validators=[Optional()])
+    meta_description = StringField('Meta Description (SEO)', validators=[Optional(), Length(max=320)])
+    is_featured = BooleanField('Featured Post', default=False)
     is_published = BooleanField('Publish')
     submit = SubmitField('Save Post')
 
@@ -145,6 +148,20 @@ class SiteSettingsForm(FlaskForm):
     ])
     
     # Social links
+    # Hero section
+    hero_title = StringField('Hero Title', validators=[Optional(), Length(max=255)])
+    hero_subtitle = TextAreaField('Hero Subtitle', validators=[Optional()])
+    hero_btn_text = StringField('Hero Button Text', validators=[Optional(), Length(max=100)])
+    hero_btn_url = StringField('Hero Button URL', validators=[Optional(), Length(max=500)])
+
+    # SEO fields
+    meta_title = StringField('Default Page Title (meta_title)', validators=[Optional(), Length(max=255)])
+    meta_description = TextAreaField('Default Meta Description', validators=[Optional()])
+    og_image = StringField('Default Open Graph Image URL', validators=[Optional(), Length(max=500)])
+    google_analytics_id = StringField('Google Analytics ID (GA4)', validators=[Optional(), Length(max=50)])
+    google_tag_manager_id = StringField('Google Tag Manager ID', validators=[Optional(), Length(max=50)])
+
+    # Social links
     twitter = StringField('Twitter URL', validators=[Optional()])
     facebook = StringField('Facebook URL', validators=[Optional()])
     linkedin = StringField('LinkedIn URL', validators=[Optional()])
@@ -153,17 +170,11 @@ class SiteSettingsForm(FlaskForm):
     submit = SubmitField('Save Settings')
 
 
-class NewsletterCampaignForm(FlaskForm):
-    """Create/Send Newsletter"""
-    subject = StringField('Newsletter Subject', validators=[DataRequired(), Length(min=3, max=255)])
-    content = TextAreaField('Newsletter Content', validators=[DataRequired(), Length(min=10)])
-    google_drive_link = StringField('Google Drive Link (optional)', validators=[Optional()])
-    submit = SubmitField('Send Newsletter')
-
-
 class CreateUserForm(FlaskForm):
     """Create Admin User"""
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=80)])
+    first_name = StringField('First Name', validators=[Optional(), Length(max=100)])
+    last_name = StringField('Last Name', validators=[Optional(), Length(max=100)])
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=8)])
     confirm_password = PasswordField('Confirm Password', validators=[
@@ -187,6 +198,8 @@ class CreateUserForm(FlaskForm):
 
 class AdminRegisterForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=3, max=80)])
+    first_name = StringField('First Name', validators=[Optional(), Length(max=100)])
+    last_name = StringField('Last Name', validators=[Optional(), Length(max=100)])
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Send Invitation')
 

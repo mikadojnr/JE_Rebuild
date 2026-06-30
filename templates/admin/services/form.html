@@ -8,7 +8,36 @@
         <div><label class="block font-semibold mb-2">Slug</label>{{ form.slug(class="w-full px-4 py-2 border border-gray-300 rounded") }}</div>
         <div><label class="block font-semibold mb-2">Description</label>{{ form.description(rows=6, class="w-full px-4 py-2 border border-gray-300 rounded") }}</div>
         <div><label class="block font-semibold mb-2">Excerpt</label>{{ form.excerpt(class="w-full px-4 py-2 border border-gray-300 rounded") }}</div>
-        <div><label class="block font-semibold mb-2">Icon</label>{{ form.icon(class="w-full px-4 py-2 border border-gray-300 rounded") }}</div>
+        <div>
+            <label class="block font-semibold mb-2">Icon (FontAwesome class)</label>
+            <div class="flex items-center gap-3">
+                {{ form.icon(class="w-full px-4 py-2 border border-gray-300 rounded", placeholder="e.g. fa-solid fa-chart-line") }}
+                <span id="icon-preview" class="text-2xl w-10 h-10 bg-gray-100 rounded flex items-center justify-center flex-shrink-0"></span>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Enter a <a href="https://fontawesome.com/search" target="_blank" class="text-blue-600 hover:underline">FontAwesome</a> class. Click an icon below to select:</p>
+            <div class="flex flex-wrap gap-2 mt-2">
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-chart-line" title="Chart Line">📈</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-briefcase" title="Briefcase">💼</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-handshake" title="Handshake">🤝</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-users" title="Users">👥</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-building" title="Building">🏢</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-file-invoice" title="Invoice">📄</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-scale-balanced" title="Balance">⚖️</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-calculator" title="Calculator">🧮</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-piggy-bank" title="Savings">🐷</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-chart-pie" title="Chart Pie">📊</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-coins" title="Coins">💰</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-rocket" title="Rocket">🚀</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-shield" title="Shield">🛡️</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-lightbulb" title="Lightbulb">💡</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-arrow-trend-up" title="Trend Up">📈</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-bullseye" title="Bullseye">🎯</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-user-tie" title="User Tie">👔</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-clock" title="Clock">⏰</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-lock" title="Lock">🔒</button>
+                <button type="button" class="icon-option px-3 py-2 border border-gray-200 rounded hover:bg-gray-100 text-lg" data-icon="fa-solid fa-globe" title="Globe">🌍</button>
+            </div>
+        </div>
         <div><label class="block font-semibold mb-2">Key Features (one per line)</label>{{ form.key_features(rows=4, class="w-full px-4 py-2 border border-gray-300 rounded") }}</div>
 
         <!-- Active Status -->
@@ -29,4 +58,37 @@
         <div class="flex gap-4"><button type="submit" class="bg-[#141495] text-white px-6 py-2 rounded">Save</button><a href="{{ url_for('admin.services_list') }}" class="px-6 py-2 border border-gray-300 rounded">Cancel</a></div>
     </form>
 </div>
+
+<script>
+document.querySelectorAll('.icon-option').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const icon = this.getAttribute('data-icon');
+        document.getElementById('icon').value = icon;
+        updateIconPreview(icon);
+        document.querySelectorAll('.icon-option').forEach(b => b.classList.remove('ring-2', 'ring-[#141495]'));
+        this.classList.add('ring-2', 'ring-[#141495]');
+    });
+});
+
+function updateIconPreview(iconClass) {
+    const preview = document.getElementById('icon-preview');
+    if (iconClass) {
+        preview.innerHTML = '<i class="' + iconClass + '"></i>';
+    } else {
+        preview.innerHTML = '';
+    }
+}
+
+// Initialize preview on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const iconInput = document.getElementById('icon');
+    if (iconInput && iconInput.value) {
+        updateIconPreview(iconInput.value);
+    }
+    // Live preview on input change
+    iconInput.addEventListener('input', function() {
+        updateIconPreview(this.value);
+    });
+});
+</script>
 {% endblock %}

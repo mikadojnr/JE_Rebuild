@@ -1,0 +1,311 @@
+{% extends "admin/base.html" %}
+{% block page_title %}Analytics{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+    .chart-container { position: relative; height: 250px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Summary Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+        <p class="text-sm text-gray-500 mb-1">Total Views</p>
+        <p class="text-2xl font-bold text-gray-900">{{ post_view_count }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+        <p class="text-sm text-gray-500 mb-1">Blog Posts</p>
+        <p class="text-2xl font-bold text-gray-900">{{ total_posts }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+        <p class="text-sm text-gray-500 mb-1">Subscribers</p>
+        <p class="text-2xl font-bold text-gray-900">{{ total_subscribers }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+        <p class="text-sm text-gray-500 mb-1">Comments</p>
+        <p class="text-2xl font-bold text-gray-900">{{ total_comments }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+        <p class="text-sm text-gray-500 mb-1">Newsletters Sent</p>
+        <p class="text-2xl font-bold text-gray-900">{{ sent_newsletters }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+        <p class="text-sm text-gray-500 mb-1">Services</p>
+        <p class="text-2xl font-bold text-gray-900">{{ total_services }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+        <p class="text-sm text-gray-500 mb-1">Testimonials</p>
+        <p class="text-2xl font-bold text-gray-900">{{ total_testimonials }}</p>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+        <p class="text-sm text-gray-500 mb-1">Team Members</p>
+        <p class="text-2xl font-bold text-gray-900">{{ total_team }}</p>
+    </div>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Subscriber Growth (Last 30 Days) -->
+    <div class="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+        <h3 class="font-semibold text-gray-800 mb-4">Subscriber Growth (Last 30 Days)</h3>
+        <div class="chart-container">
+            <canvas id="subscriberChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Comments Trend (Last 30 Days) -->
+    <div class="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+        <h3 class="font-semibold text-gray-800 mb-4">Comments Trend (Last 30 Days)</h3>
+        <div class="chart-container">
+            <canvas id="commentChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Posts by Category -->
+    <div class="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+        <h3 class="font-semibold text-gray-800 mb-4">Posts by Category</h3>
+        <div class="chart-container">
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Published vs Draft -->
+    <div class="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+        <h3 class="font-semibold text-gray-800 mb-4">Published vs Draft</h3>
+        <div class="chart-container">
+            <canvas id="publishChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Comments: Approved vs Pending -->
+    <div class="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+        <h3 class="font-semibold text-gray-800 mb-4">Comments Status</h3>
+        <div class="chart-container">
+            <canvas id="commentStatusChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 3 -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Posts Published (Monthly, Last 12 Months) -->
+    <div class="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+        <h3 class="font-semibold text-gray-800 mb-4">Posts Published (Monthly)</h3>
+        <div class="chart-container">
+            <canvas id="monthlyPostChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Top 10 Most Viewed Posts -->
+    <div class="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+        <h3 class="font-semibold text-gray-800 mb-4">Top 10 Most Viewed Posts</h3>
+        <div class="chart-container">
+            <canvas id="topPostsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Active vs Inactive Overview -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+        <h3 class="font-semibold text-gray-800 mb-4">Services: Active vs Inactive</h3>
+        <div class="chart-container">
+            <canvas id="servicesChart"></canvas>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+        <h3 class="font-semibold text-gray-800 mb-4">Subscribers: Active vs Inactive</h3>
+        <div class="chart-container">
+            <canvas id="subsChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const colors = ['#141495', '#2563eb', '#7c3aed', '#db2777', '#dc2626', '#ea580c', '#ca8a04', '#16a34a', '#0891b2', '#4f46e5'];
+
+    // ---- Subscriber Growth ----
+    {% if subscriber_daily %}
+    new Chart(document.getElementById('subscriberChart'), {
+        type: 'line',
+        data: {
+            labels: [{% for date, count in subscriber_daily %}'{{ date.strftime("%b %d") }}',{% endfor %}],
+            datasets: [{
+                label: 'New Subscribers',
+                data: [{% for date, count in subscriber_daily %}{{ count }},{% endfor %}],
+                borderColor: '#141495',
+                backgroundColor: 'rgba(20, 20, 149, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+    {% endif %}
+
+    // ---- Comments Trend ----
+    {% if comment_daily %}
+    new Chart(document.getElementById('commentChart'), {
+        type: 'bar',
+        data: {
+            labels: [{% for date, count in comment_daily %}'{{ date.strftime("%b %d") }}',{% endfor %}],
+            datasets: [{
+                label: 'Comments',
+                data: [{% for date, count in comment_daily %}{{ count }},{% endfor %}],
+                backgroundColor: '#2563eb'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+    {% endif %}
+
+    // ---- Posts by Category ----
+    {% if category_counts %}
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'doughnut',
+        data: {
+            labels: [{% for cat, count in category_counts %}'{{ cat }}',{% endfor %}],
+            datasets: [{
+                data: [{% for cat, count in category_counts %}{{ count }},{% endfor %}],
+                backgroundColor: colors.slice(0, {{ category_counts|length }})
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+    {% endif %}
+
+    // ---- Published vs Draft ----
+    new Chart(document.getElementById('publishChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Published ({{ published_count }})', 'Draft ({{ draft_count }})'],
+            datasets: [{
+                data: [{{ published_count }}, {{ draft_count }}],
+                backgroundColor: ['#16a34a', '#9ca3af']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    // ---- Comment Status ----
+    new Chart(document.getElementById('commentStatusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Approved ({{ approved_comments }})', 'Pending ({{ pending_comments }})'],
+            datasets: [{
+                data: [{{ approved_comments }}, {{ pending_comments }}],
+                backgroundColor: ['#16a34a', '#f59e0b']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    // ---- Monthly Posts ----
+    {% if post_monthly %}
+    new Chart(document.getElementById('monthlyPostChart'), {
+        type: 'bar',
+        data: {
+            labels: [{% for month, count in post_monthly %}'{{ month }}',{% endfor %}],
+            datasets: [{
+                label: 'Posts',
+                data: [{% for month, count in post_monthly %}{{ count }},{% endfor %}],
+                backgroundColor: '#141495'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+    {% endif %}
+
+    // ---- Top 10 Most Viewed Posts ----
+    {% if top_posts %}
+    new Chart(document.getElementById('topPostsChart'), {
+        type: 'bar',
+        data: {
+            labels: [{% for post in top_posts %}'{{ post.title|truncate(30) }}',{% endfor %}],
+            datasets: [{
+                label: 'Views',
+                data: [{% for post in top_posts %}{{ post.view_count or 0 }},{% endfor %}],
+                backgroundColor: colors.slice(0, {{ top_posts|length }})
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+    {% endif %}
+
+    // ---- Services: Active vs Inactive ----
+    new Chart(document.getElementById('servicesChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Active ({{ active_services }})', 'Inactive ({{ inactive_services }})'],
+            datasets: [{
+                data: [{{ active_services }}, {{ inactive_services }}],
+                backgroundColor: ['#16a34a', '#ef4444']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+
+    // ---- Subscribers: Active vs Inactive ----
+    new Chart(document.getElementById('subsChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Active ({{ active_subs }})', 'Inactive ({{ inactive_subs }})'],
+            datasets: [{
+                data: [{{ active_subs }}, {{ inactive_subs }}],
+                backgroundColor: ['#16a34a', '#ef4444']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+});
+</script>
+{% endblock %}

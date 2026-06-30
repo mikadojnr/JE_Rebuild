@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results{% if q %} for "{{ q }}"{% endif %} - John & Eniola Consultancy{% endblock %}
+
+{% block content %}
+<section class="py-20 bg-white min-h-[60vh]">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Search Results</h1>
+            <form action="{{ url_for('public.search') }}" method="GET" class="max-w-2xl flex gap-3">
+                <input type="text" name="q" value="{{ q }}" placeholder="Search articles, services, newsletters..."
+                       class="flex-1 px-5 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#141495] focus:ring-2 focus:ring-[#141495]/10"
+                       autocomplete="off" required>
+                <button type="submit" class="px-6 py-3 bg-[#141495] text-white rounded-xl hover:bg-[#0f0f7a] transition font-medium">
+                    <i class="fa-solid fa-search"></i> Search
+                </button>
+            </form>
+        </div>
+
+        {% if q %}
+            {% if total == 0 %}
+            <div class="text-center py-16">
+                <i class="fa-solid fa-search text-5xl text-gray-300 mb-6"></i>
+                <h2 class="text-xl font-semibold text-gray-700 mb-2">No results found</h2>
+                <p class="text-gray-500">Your search for "<strong>{{ q }}</strong>" did not match anything.</p>
+                <p class="text-gray-400 mt-2">Try different keywords or browse our <a href="{{ url_for('public.insights') }}" class="text-[#141495] hover:underline">Insights</a>.</p>
+            </div>
+            {% else %}
+            <p class="text-sm text-gray-500 mb-8">{{ total }} result{% if total != 1 %}s{% endif %} for "<strong>{{ q }}</strong>"</p>
+
+            <!-- Blog Posts -->
+            {% if results.posts %}
+            <div class="mb-12">
+                <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-file-pen text-[#141495]"></i> Articles
+                </h2>
+                <div class="space-y-4">
+                    {% for post in results.posts %}
+                    <a href="{{ url_for('public.blog_detail', slug=post.slug) }}" class="block bg-gray-50 rounded-xl p-5 hover:bg-gray-100 transition border border-gray-100">
+                        <div class="flex items-start gap-4">
+                            {% if post.featured_image %}
+                            <img src="{{ post.featured_image }}" alt="" class="w-20 h-16 rounded-lg object-cover flex-shrink-0">
+                            {% endif %}
+                            <div class="min-w-0 flex-1">
+                                <h3 class="font-semibold text-gray-900 mb-1">{{ post.title }}</h3>
+                                <p class="text-sm text-gray-600 line-clamp-2">{{ post.excerpt or post.content[:150]|striptags }}</p>
+                                <p class="text-xs text-gray-400 mt-2">
+                                    {{ post.category }} · {{ post.published_at.strftime('%b %d, %Y') if post.published_at else '' }} · {{ post.reading_time }} min read
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Services -->
+            {% if results.services %}
+            <div class="mb-12">
+                <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-briefcase text-[#141495]"></i> Services
+                </h2>
+                <div class="space-y-4">
+                    {% for service in results.services %}
+                    <a href="{{ url_for('public.services') }}#{{ service.slug }}" class="block bg-gray-50 rounded-xl p-5 hover:bg-gray-100 transition border border-gray-100">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 bg-[#141495]/10 rounded-lg flex items-center justify-center text-xl flex-shrink-0">
+                                {% if service.icon and service.icon.startswith('fa-') %}<i class="{{ service.icon }}"></i>{% else %}{{ service.icon or '📊' }}{% endif %}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <h3 class="font-semibold text-gray-900 mb-1">{{ service.title }}</h3>
+                                <p class="text-sm text-gray-600 line-clamp-2">{{ service.excerpt or service.description[:150] }}</p>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Newsletters -->
+            {% if results.newsletters %}
+            <div class="mb-12">
+                <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-newspaper text-[#141495]"></i> Newsletters
+                </h2>
+                <div class="space-y-4">
+                    {% for nl in results.newsletters %}
+                    <a href="{{ url_for('public.newsletter_detail', slug=nl.slug) }}" class="block bg-gray-50 rounded-xl p-5 hover:bg-gray-100 transition border border-gray-100">
+                        <div class="flex items-start gap-4">
+                            {% if nl.featured_image %}
+                            <img src="{{ nl.featured_image }}" alt="" class="w-20 h-16 rounded-lg object-cover flex-shrink-0">
+                            {% endif %}
+                            <div class="min-w-0 flex-1">
+                                <h3 class="font-semibold text-gray-900 mb-1">{{ nl.title }}</h3>
+                                <p class="text-sm text-gray-600 line-clamp-2">{{ nl.excerpt or '' }}</p>
+                                <p class="text-xs text-gray-400 mt-2">{{ nl.published_at.strftime('%b %d, %Y') if nl.published_at else '' }}</p>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+        {% else %}
+            <div class="text-center py-16">
+                <i class="fa-solid fa-search text-5xl text-gray-300 mb-6"></i>
+                <h2 class="text-xl font-semibold text-gray-700 mb-2">What are you looking for?</h2>
+                <p class="text-gray-500">Enter a keyword above to search through our articles, services, and newsletters.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

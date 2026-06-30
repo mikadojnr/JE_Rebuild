@@ -28,7 +28,7 @@
 </style>
 
 
-<nav class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100 shadow-sm">
+<nav class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-100 shadow-sm relative">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <!-- Main Navbar -->
@@ -80,9 +80,28 @@
                    {{ 'text-[#0800f0]' if request.endpoint == 'public.contact' else ''}}">
                     Contact Us
                 </a>
+
+                <!-- Search Icon -->
+                <button onclick="toggleSearch()" class="text-gray-600 hover:text-[#141495] transition" aria-label="Search">
+                    <i class="fa-solid fa-search text-lg"></i>
+                </button>
             </div>
 
-            <!-- Mobile Menu Button -->
+            <!-- Desktop Search Bar (hidden by default) -->
+            <div id="desktop-search" class="hidden absolute left-0 right-0 top-full bg-white border-b border-gray-100 shadow-lg px-4 sm:px-6 lg:px-8 py-4">
+                <form action="{{ url_for('public.search') }}" method="GET" class="max-w-3xl mx-auto flex gap-3">
+                    <input type="text" name="q" placeholder="Search articles, services, newsletters..." 
+                           class="flex-1 px-5 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-[#141495] focus:ring-2 focus:ring-[#141495]/10 text-sm"
+                           autocomplete="off" required>
+                    <button type="submit" class="px-6 py-3 bg-[#141495] text-white rounded-xl hover:bg-[#0f0f7a] transition text-sm font-medium">
+                        <i class="fa-solid fa-search"></i>
+                    </button>
+                    <button type="button" onclick="toggleSearch()" class="px-4 py-3 text-gray-500 hover:text-gray-700 transition text-sm" aria-label="Close search">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </form>
+            </div>
+
             <button 
                 id="mobile-menu-btn"
                 onclick="toggleMobileMenu()"
@@ -116,6 +135,11 @@
                 </svg>
             </button>
         </div>
+
+        <!-- Mobile Search Icon (absolute below logo) -->
+        <button onclick="toggleSearch()" class="md:hidden absolute left-4 top-full mt-1 text-gray-500 hover:text-[#141495] transition z-10" aria-label="Search">
+            <i class="fa-solid fa-search text-lg"></i>
+        </button>
 
         <!-- Mobile Navigation -->
         <div id="mobile-menu" 
@@ -176,4 +200,22 @@
         openIcon.classList.toggle('hidden');
         closeIcon.classList.toggle('hidden');
     }
+
+    function toggleSearch() {
+        const searchBar = document.getElementById('desktop-search');
+        searchBar.classList.toggle('hidden');
+        if (!searchBar.classList.contains('hidden')) {
+            searchBar.querySelector('input').focus();
+        }
+    }
+
+    // Close search on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const searchBar = document.getElementById('desktop-search');
+            if (!searchBar.classList.contains('hidden')) {
+                searchBar.classList.add('hidden');
+            }
+        }
+    });
 </script>

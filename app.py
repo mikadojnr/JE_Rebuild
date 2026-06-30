@@ -183,12 +183,19 @@ def init_default_data():
             logo_image_path='/static/images/logo.png',
             logo_dark_image_path='/static/images/logo-dark.png',
             favicon_path='/static/images/favicon.ico',
+            hero_title='Financial Excellence Redefined',
+            hero_subtitle='Empowering businesses with strategic financial solutions, comprehensive tax planning, and expert advisory services that drive sustainable growth.',
+            hero_btn_text='Schedule Consultation',
+            hero_btn_url='/contact',
             social_links={
                 'twitter': 'https://twitter.com/je_consultancy/',
                 'facebook': 'https://www.facebook.com/people/John-Eniola-Consultancy-Limited/61552669754142/',
                 'linkedin': 'https://www.linkedin.com/company/johneniolaltd?_l=en_US',
                 'instagram': 'https://www.instagram.com/je_consultancy/'
-            }
+            },
+            meta_title='John & Eniola Consultancy',
+            meta_description='Your trusted partner in financial excellence. We provide comprehensive financial solutions that drive business success and sustainable growth.',
+            og_image='/static/images/og-default.jpg',
         )
         db.session.add(default_settings)
         db.session.commit()

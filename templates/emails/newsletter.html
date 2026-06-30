@@ -4,18 +4,20 @@
 
 {% block content %}
     {{ content | safe }}
-    
-    {% if google_drive_link or pdf_url %}
+
+    {% if newsletter_url %}
     <div style="margin: 35px 0; text-align: center;">
-        <a href="{{ pdf_url or google_drive_link }}" 
-           class="button" style="background:#141495; color:white; padding:16px 40px;">
-            📄 Download Full PDF
+        <a href="{{ newsletter_url }}"
+           class="button" style="background:#141495; color:white; padding:16px 40px; text-decoration:none; display:inline-block; border-radius:8px; font-weight:600;">
+            Read Full Newsletter
         </a>
     </div>
-
-    <a href="{{ url_for('public.unsubscribe', email=recipient_email|default(''), _external=True) }}" 
-                   style="color: #64748b; text-decoration: underline;">
-                    Unsubscribe
-                </a>
     {% endif %}
+
+    <p style="margin-top: 30px; font-size: 12px; color: #64748b;">
+        <a href="{{ url_for('public.unsubscribe', email=recipient_email|default(''), _external=True) }}"
+           style="color: #64748b; text-decoration: underline;">
+            Unsubscribe
+        </a>
+    </p>
 {% endblock %}

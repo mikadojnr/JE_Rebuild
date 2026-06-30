@@ -12,46 +12,56 @@
 
 {% if slides %}
 <div class="bg-white rounded-xl shadow overflow-hidden">
-    <table class="w-full">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-6 py-4 text-left font-semibold">Preview</th>
-                <th class="px-6 py-4 text-left font-semibold">Title</th>
-                <th class="px-6 py-4 text-left font-semibold">Order</th>
-                <th class="px-6 py-4 text-left font-semibold">Status</th>
-                <th class="px-6 py-4 text-right font-semibold">Actions</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y">
-            {% for slide in slides %}
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4">
-                    <img src="{{ slide.image_path }}" 
-                         alt="{{ slide.title }}" 
-                         class="w-20 h-12 object-cover rounded border">
-                </td>
-                <td class="px-6 py-4 font-medium">{{ slide.title }}</td>
-                <td class="px-6 py-4">{{ slide.order }}</td>
-                <td class="px-6 py-4">
-                    <span class="px-3 py-1 text-xs rounded-full 
-                        {% if slide.is_active %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-600{% endif %}">
-                        {% if slide.is_active %}Active{% else %}Inactive{% endif %}
-                    </span>
-                </td>
-                <td class="px-6 py-4 text-right space-x-4">
-                    <a href="{{ url_for('admin.hero_slide_edit', slide_id=slide.id) }}" 
-                       class="text-blue-600 hover:text-blue-800">
-                        <i class="fa fa-edit"></i>
-                    </a>
-                    <button onclick="deleteViaAjax('{{ url_for('admin.hero_slide_delete', slide_id=slide.id) }}', this.closest('tr'))" 
-                            class="text-red-600 hover:text-red-800">
-                        <i class="fa fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-4 text-left font-semibold">Preview</th>
+                    <th class="px-6 py-4 text-left font-semibold">Title</th>
+                    <th class="px-6 py-4 text-left font-semibold">CTA Button</th>
+                    <th class="px-6 py-4 text-left font-semibold">Order</th>
+                    <th class="px-6 py-4 text-left font-semibold">Status</th>
+                    <th class="px-6 py-4 text-right font-semibold">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for slide in slides %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4">
+                        <img src="{{ slide.image_path }}" 
+                             alt="{{ slide.alt_text or slide.title }}" 
+                             class="w-20 h-12 object-cover rounded border">
+                    </td>
+                    <td class="px-6 py-4 font-medium">{{ slide.title }}</td>
+                    <td class="px-6 py-4">
+                        {% if slide.btn_text and slide.btn_url %}
+                        <span class="text-sm text-[#141495]">{{ slide.btn_text }}</span>
+                        {% else %}
+                        <span class="text-sm text-gray-400">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">{{ slide.order }}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 text-xs rounded-full 
+                            {% if slide.is_active %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+                            {% if slide.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-right space-x-4">
+                        <a href="{{ url_for('admin.hero_slide_edit', slide_id=slide.id) }}" 
+                           class="text-blue-600 hover:text-blue-800">
+                            <i class="fa fa-edit"></i>
+                        </a>
+                        <button onclick="deleteViaAjax('{{ url_for('admin.hero_slide_delete', slide_id=slide.id) }}', this.closest('tr'))" 
+                                class="text-red-600 hover:text-red-800">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% else %}
 <div class="bg-white rounded-2xl shadow p-16 text-center">

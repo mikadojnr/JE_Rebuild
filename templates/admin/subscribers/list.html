@@ -2,7 +2,7 @@
 {% block page_title %}Newsletter Subscribers{% endblock %}
 {% block content %}
 <div class="flex justify-end items-center mb-8">
-    <a href="{{ url_for('admin.newsletter_list') }}" class="bg-[#141495] text-white px-6 py-3 rounded">📬 Send Newsletter</a>
+    <a href="{{ url_for('admin.newsletter_list') }}" class="bg-[#141495] text-white px-6 py-3 rounded"><i class="fa-solid fa-paper-plane"></i> Send Newsletter</a>
 </div>
 {% if subscribers.items %}
 <div class="bg-white rounded-lg shadow overflow-x-auto">

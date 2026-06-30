@@ -34,12 +34,12 @@
         </div>
         
         {% if posts.items %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {% for post in posts.items %}
             <a href="{{ url_for('public.blog_detail', slug=post.slug) }}" class="group">
                 <div class="insight-card h-full flex flex-col rounded-md">
                     {% if post.featured_image %}
-                    <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="w-full h-48 object-cover mb-4 group-hover:scale-105 transition">
+                    <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="w-full object-cover mb-4 group-hover:scale-105 transition">
                     {% endif %}
                     
                     <div class="p-3 pb-7">

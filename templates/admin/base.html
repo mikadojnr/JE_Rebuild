@@ -52,6 +52,11 @@
                 <i class="text-xl fa-solid fa-chart-column"></i> Dashboard
             </a>
 
+            <a href="{{ url_for('admin.analytics') }}"
+               class="admin-nav-link {% if 'analytics' in request.endpoint %}active{% endif %}">
+                <i class="text-xl fa-solid fa-chart-simple"></i> Analytics
+            </a>
+
             <a href="{{ url_for('admin.hero_slides_list') }}"
                class="admin-nav-link {% if 'hero_slides' in request.endpoint %}active{% endif %}">
                 <i class="text-xl fa-solid fa-images"></i> Hero Slides
@@ -100,6 +105,7 @@
             <a href="{{ url_for('admin.admins_list') }}"
                class="admin-nav-link {% if 'admins' in request.endpoint %}active{% endif %}">
                 <i class="text-xl fa-solid fa-user-shield"></i> Admins
+            </a>
 
             <a href="{{ url_for('admin.site_settings') }}"
                class="admin-nav-link {% if 'site_settings' in request.endpoint %}active{% endif %}">
@@ -158,7 +164,7 @@
                 <div class="flex items-center gap-4">
 
                     <span class="hidden sm:block text-sm text-gray-600">
-                        {{ current_user.username if current_user.is_authenticated else 'Guest' }}
+                        {{ current_user.full_name if current_user.is_authenticated else 'Guest' }}
                     </span>
 
                 </div>

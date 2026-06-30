@@ -1,19 +1,26 @@
 {% extends "base.html" %}
 
 {% block meta %}
-
 {% if post %}
 <meta property="og:title" content="{{ post.title }}">
 <meta property="og:description" content="{{ post.excerpt or post.content[:150]|striptags }}">
-<meta property="og:image" content="{{ post.featured_image|default('https://yourdomain.com/static/images/default-og.jpg', true) }}">
+<meta property="og:image" content="{{ post.featured_image or (request.url_root.rstrip('/') + '/static/images/og-default.jpg') }}">
 <meta property="og:url" content="{{ request.url }}">
 <meta property="og:type" content="article">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ post.title }}">
+<meta name="twitter:description" content="{{ post.excerpt or post.content[:150]|striptags }}">
+<meta name="twitter:image" content="{{ post.featured_image or (request.url_root.rstrip('/') + '/static/images/og-default.jpg') }}">
 {% endif %}
-
 {% endblock %}
 
-{% block title %}{{ post.title }} - John & Eniola Consultancy{% endblock %}
+{% block title %}{{ post.title }} - {{ site_settings.company_name if site_settings else 'John & Eniola Consultancy' }}{% endblock %}
+{% block description %}{{ post.excerpt or post.content[:160]|striptags }}{% endblock %}
+{% block og_title %}{{ post.title }}{% endblock %}
+{% block og_description %}{{ post.excerpt or post.content[:160]|striptags }}{% endblock %}
+{% block og_image %}{{ post.featured_image or (request.url_root.rstrip('/') + '/static/images/og-default.jpg') }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block canonical %}{{ request.url }}{% endblock %}
 
 <style>
     .prose img {
@@ -57,9 +64,9 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
             
             <!-- Main Content -->
-            <div class="lg:col-span-2">
+            <article class="lg:col-span-2">
                 {% if post.featured_image %}
-                <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="w-full rounded-md mb-8 h-96 object-cover">
+                <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="w-full rounded-md mb-8 object-cover">
                 {% endif %}
                 
                 <div class="prose max-w-none mb-5 border-t pt-5">
@@ -82,28 +89,31 @@
                 <div class="mb-12 pb-12 border-b">
                     <h4 class="font-semibold mb-4">Share This Article</h4>
                     <div class="flex gap-4">
-                        
-                        <!-- Twitter / X -->
-                        <a href="https://twitter.com/intent/tweet?text={{ post.title|urlencode }}&url={{ request.url|urlencode }}&via=JohnEniolaCons" 
+
+                        <a href="https://twitter.com/intent/tweet?text={{ (post.excerpt or post.title)|urlencode }}&url={{ request.url|urlencode }}&via=JohnEniolaCons"
                         target="_blank"
                         class="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center hover:opacity-90 transition">
                             <i class="fa-brands fa-x-twitter"></i>
                         </a>
-                        
-                        <!-- Facebook -->
-                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url|urlencode }}" 
+
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url|urlencode }}"
                         target="_blank"
                         class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center hover:opacity-90 transition">
                             <i class="fa-brands fa-facebook-f"></i>
                         </a>
-                        
-                        <!-- LinkedIn -->
-                        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.url|urlencode }}" 
+
+                        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.url|urlencode }}"
                         target="_blank"
                         class="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center hover:opacity-90 transition">
                             <i class="fa-brands fa-linkedin-in"></i>
                         </a>
-                        
+
+                        <button onclick="copyPageLink('{{ (post.excerpt or post.title)|e }}')"
+                        class="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 text-white flex items-center justify-center hover:opacity-90 transition"
+                        title="Copy link to share on Instagram">
+                            <i class="fa-brands fa-instagram"></i>
+                        </button>
+
                     </div>
                 </div>
                 
@@ -172,7 +182,7 @@
                     <p class="text-gray-500 mb-8">No approved comments yet. Be the first to comment!</p>
                     {% endif %}
                 </div>
-            </div>
+            </article>
             
             <!-- Sidebar -->
             <div class="lg:col-span-1 flex">
@@ -191,7 +201,7 @@
                         {% for related in related_posts %}
                         <a href="{{ url_for('public.blog_detail', slug=related.slug) }}" class="flex items-center block group border p-3 mt-3">
                             {% if related.featured_image %}
-                                <img src="{{ related.featured_image }}" alt="{{ related.title }}" class="w-24 h-24 rounded-lg object-cover flex-shrink-0">
+                                <img src="{{ related.featured_image }}" alt="{{ related.title }}" class="w-24 rounded-lg object-cover flex-shrink-0">
                             {% endif %}
                             <div class="pl-3">
                                 <h5 class="font-semibold text-sm text-[#141495] group-hover:text-[#0800f0] transition line-clamp-2">{{ related.title }}</h5>
@@ -213,7 +223,6 @@ function replyTo(commentId) {
     document.querySelector('#comment-form textarea').focus();
 }
 
-// Reset reply state after submission
 document.getElementById('comment-form').addEventListener('submit', function(e) {
     const formData = new FormData(this);
     const submitBtn = this.querySelector('button[type="submit"]');
@@ -244,5 +253,58 @@ document.getElementById('comment-form').addEventListener('submit', function(e) {
 
     e.preventDefault();
 });
+
+function copyPageLink(text) {
+    const url = window.location.href;
+    const shareText = text + ' ' + url;
+    navigator.clipboard.writeText(shareText).then(() => {
+        alert('Link copied! Share it on Instagram.');
+    }).catch(() => {
+        alert('Please copy the URL from the address bar to share on Instagram.');
+    });
+}
 </script>
+{% endblock %}
+
+{% block breadcrumbs_schema %}
+{% if post %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Home", "item": "{{ request.url_root.rstrip('/') }}"},
+        {"@type": "ListItem", "position": 2, "name": "Insights", "item": "{{ request.url_root.rstrip('/') }}/insights"},
+        {"@type": "ListItem", "position": 3, "name": "{{ post.title|escape }}", "item": "{{ request.url }}"}
+    ]
+}
+</script>
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "{{ post.title|escape }}",
+    "description": "{{ post.excerpt or post.content[:160]|striptags }}",
+    "image": "{{ post.featured_image or (request.url_root.rstrip('/') + '/static/images/og-default.jpg') }}",
+    "author": {
+        "@type": "Person",
+        "name": "{{ post.author_name or (site_settings.company_name if site_settings else 'John & Eniola Consultancy') }}"
+    }{% if post.published_at %},
+    "datePublished": "{{ post.published_at.isoformat() }}",
+    "dateModified": "{{ post.updated_at.isoformat() if post.updated_at else post.published_at.isoformat() }}"{% endif %},
+    "publisher": {
+        "@type": "Organization",
+        "name": "{% if site_settings %}{{ site_settings.company_name }}{% else %}John & Eniola Consultancy{% endif %}",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "{% if site_settings and site_settings.logo_image_path %}{{ request.url_root.rstrip('/') }}{{ site_settings.logo_image_path }}{% else %}{{ request.url_root.rstrip('/') }}/static/images/logo.png{% endif %}"
+        }
+    },
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "{{ request.url }}"
+    }
+}
+</script>
+{% endif %}
 {% endblock %}

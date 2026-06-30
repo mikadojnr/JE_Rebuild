@@ -18,6 +18,8 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    first_name = db.Column(db.String(100), nullable=True, default='')
+    last_name = db.Column(db.String(100), nullable=True, default='')
     password_hash = db.Column(db.String(255), nullable=True)
     is_admin = db.Column(db.Boolean, default=True)
     is_active = db.Column(db.Boolean, default=False)
@@ -26,6 +28,12 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    @property
+    def full_name(self):
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        return self.username
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -40,7 +48,7 @@ class User(UserMixin, db.Model):
 
     def generate_reset_token(self):
         self.reset_token = secrets.token_urlsafe(32)
-        return self.reset_tokens
+        return self.reset_token
 
 
 class SiteSettings(db.Model):
@@ -58,7 +66,19 @@ class SiteSettings(db.Model):
     logo_image_path = db.Column(db.String(255), default='/static/images/logo.png')
     logo_dark_image_path = db.Column(db.String(255), default='/static/images/logo-dark.png')
     hero_background_image = db.Column(db.String(255), default='/static/images/hero-bg.jpg')
+    hero_title = db.Column(db.String(255), default='Financial Excellence Redefined')
+    hero_subtitle = db.Column(db.Text, default='Empowering businesses with strategic financial solutions, comprehensive tax planning, and expert advisory services that drive sustainable growth.')
+    hero_btn_text = db.Column(db.String(100), default='Schedule Consultation')
+    hero_btn_url = db.Column(db.String(500), default='/contact')
     favicon_path = db.Column(db.String(255), default='/static/images/favicon.ico')
+
+    # SEO fields
+    meta_title = db.Column(db.String(255), default='John & Eniola Consultancy')
+    meta_description = db.Column(db.Text, default='Your trusted partner in financial excellence.')
+    og_image = db.Column(db.String(500), default='/static/images/og-default.jpg')
+    google_analytics_id = db.Column(db.String(50))
+    google_tag_manager_id = db.Column(db.String(50))
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -87,12 +107,15 @@ class BlogPost(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     slug = db.Column(db.String(255), unique=True, nullable=False)
-    excerpt = db.Column(db.String(500))
+    excerpt = db.Column(db.Text)
     content = db.Column(LONGTEXT, nullable=False)
     featured_image = db.Column(db.String(255))
     author_name = db.Column(db.String(120), default='John & Eniola Team')
     category = db.Column(db.String(100), default='Insights')
     tags = db.Column(db.JSON, default=list)
+    meta_description = db.Column(db.String(320))
+    is_featured = db.Column(db.Boolean, default=False)
+    reading_time = db.Column(db.Integer, default=0)
     is_published = db.Column(db.Boolean, default=False)
     view_count = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -198,8 +221,7 @@ class Newsletter(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     slug = db.Column(db.String(255), unique=True, nullable=False, index=True)
-    excerpt = db.Column(db.String(500))
-    # content = db.Column(db.Text, nullable=False)          # Email body / description
+    excerpt = db.Column(db.Text, nullable=True)
     google_drive_link = db.Column(db.String(500))
     # pdf_url = db.Column(db.String(500))
     featured_image = db.Column(db.String(255))
@@ -254,6 +276,9 @@ class HeroSlide(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     subtitle = db.Column(db.Text)
+    btn_text = db.Column(db.String(100))
+    btn_url = db.Column(db.String(500))
+    alt_text = db.Column(db.String(500))
     image_path = db.Column(db.String(500), nullable=False)   # Local file path
     order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)

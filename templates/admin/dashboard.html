@@ -3,84 +3,307 @@
 {% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <!-- Stats Cards -->
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex justify-between items-start">
-            <div>
-                <p class="text-gray-600 text-sm font-semibold">Blog Posts</p>
-                <p class="text-4xl font-bold text-[#141495] mt-2">{{ stats.total_posts }}</p>
-            </div>
-            <div class="text-4xl"><i class="text-gray-500 fa-solid fa-file-pen"></i></div>
+<!-- Stats Cards Row -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Blog Posts</span>
+            <span class="text-lg text-gray-300"><i class="fa-solid fa-file-pen"></i></span>
+        </div>
+        <p class="text-3xl font-bold text-[#141495]">{{ stats.total_posts }}</p>
+        <div class="flex gap-3 mt-2 text-xs text-gray-500">
+            <span class="text-emerald-600">{{ stats.published_posts }} published</span>
+            {% if stats.draft_posts > 0 %}<span class="text-amber-600">{{ stats.draft_posts }} drafts</span>{% endif %}
         </div>
     </div>
-    
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex justify-between items-start">
-            <div>
-                <p class="text-gray-600 text-sm font-semibold">Services</p>
-                <p class="text-4xl font-bold text-[#141495] mt-2">{{ stats.total_services }}</p>
-            </div>
-            <div class="text-4xl"><i class="text-gray-500 fa-solid fa-briefcase"></i></div>
+
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Subscribers</span>
+            <span class="text-lg text-gray-300"><i class="fa-solid fa-envelope"></i></span>
+        </div>
+        <p class="text-3xl font-bold text-[#141495]">{{ stats.total_subscribers }}</p>
+        <div class="flex gap-3 mt-2 text-xs text-gray-500">
+            <span class="text-emerald-600">{{ stats.active_subscribers }} active</span>
+            {% if stats.recent_subscribers > 0 %}<span class="text-blue-600">+{{ stats.recent_subscribers }} (30d)</span>{% endif %}
         </div>
     </div>
-    
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex justify-between items-start">
-            <div>
-                <p class="text-gray-600 text-sm font-semibold">Team Members</p>
-                <p class="text-4xl font-bold text-[#141495] mt-2">{{ stats.total_team }}</p>
-            </div>
-            <div class="text-4xl"><i class="text-gray-500 fa-solid fa-users"></i></div>
+
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Newsletters</span>
+            <span class="text-lg text-gray-300"><i class="fa-solid fa-mailchimp"></i></span>
+        </div>
+        <p class="text-3xl font-bold text-[#141495]">{{ stats.total_newsletters }}</p>
+        <div class="flex gap-3 mt-2 text-xs text-gray-500">
+            <span class="text-emerald-600">{{ stats.published_newsletters }} published</span>
+            <span class="text-blue-600">{{ stats.sent_campaigns }} sent</span>
         </div>
     </div>
-    
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex justify-between items-start">
-            <div>
-                <p class="text-gray-600 text-sm font-semibold">Subscribers</p>
-                <p class="text-4xl font-bold text-[#141495] mt-2">{{ stats.total_subscribers }}</p>
-            </div>
-            <div class="text-4xl"><i class="text-gray-500 fa-solid fa-envelope"></i></div>
+
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Comments</span>
+            <span class="text-lg text-gray-300"><i class="fa-solid fa-comment"></i></span>
+        </div>
+        <p class="text-3xl font-bold text-[#141495]">{{ stats.total_comments }}</p>
+        <div class="flex gap-3 mt-2 text-xs text-gray-500">
+            <span class="text-emerald-600">{{ stats.approved_comments }} approved</span>
+            {% if stats.pending_comments > 0 %}<span class="text-amber-600">{{ stats.pending_comments }} pending</span>{% endif %}
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Testimonials</span>
+            <span class="text-lg text-gray-300"><i class="fa-solid fa-star"></i></span>
+        </div>
+        <p class="text-3xl font-bold text-[#141495]">{{ stats.total_testimonials }}</p>
+        <div class="flex gap-3 mt-2 text-xs text-gray-500">
+            <span class="text-emerald-600">{{ stats.active_testimonials }} active</span>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Hero Slides</span>
+            <span class="text-lg text-gray-300"><i class="fa-solid fa-images"></i></span>
+        </div>
+        <p class="text-3xl font-bold text-[#141495]">{{ stats.total_hero_slides }}</p>
+        <div class="flex gap-3 mt-2 text-xs text-gray-500">
+            <span class="text-emerald-600">{{ stats.active_hero_slides }} active</span>
         </div>
     </div>
 </div>
 
+<!-- Second Row: Extra Stats + Quick Actions -->
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Services</span>
+            <span class="text-lg text-gray-300"><i class="fa-solid fa-briefcase"></i></span>
+        </div>
+        <p class="text-2xl font-bold text-[#141495]">{{ stats.total_services }}</p>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Team Members</span>
+            <span class="text-lg text-gray-300"><i class="fa-solid fa-users"></i></span>
+        </div>
+        <p class="text-2xl font-bold text-[#141495]">{{ stats.total_team }}</p>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Admin Users</span>
+            <span class="text-lg text-gray-300"><i class="fa-solid fa-user-shield"></i></span>
+        </div>
+        <p class="text-2xl font-bold text-[#141495]">{{ stats.total_admins }}</p>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Views</span>
+            <span class="text-lg text-gray-300"><i class="fa-solid fa-eye"></i></span>
+        </div>
+        <p class="text-2xl font-bold text-[#141495]">{{ stats.post_view_count }}</p>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Comments Status -->
-    <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-xl font-bold text-[#141495] mb-4">Comments Status</h3>
-        <div class="space-y-4">
-            <div class="flex justify-between items-center p-4 bg-gray-50 rounded">
-                <span>Total Comments</span>
-                <span class="font-bold text-lg">{{ stats.total_comments }}</span>
+    <!-- Recent Blog Posts -->
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+        <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                <i class="fa-solid fa-file-pen text-[#141495]"></i> Recent Blog Posts
+            </h3>
+            <a href="{{ url_for('admin.blog_list') }}" class="text-sm text-[#141495] hover:underline">View all</a>
+        </div>
+        <div class="p-6">
+            {% if recent_posts %}
+            <div class="space-y-4">
+                {% for post in recent_posts %}
+                <div class="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 transition">
+                    {% if post.featured_image %}
+                    <img src="{{ post.featured_image }}" alt="" class="w-14 h-14 rounded-lg object-cover flex-shrink-0">
+                    {% else %}
+                    <div class="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0">
+                        <i class="fa-solid fa-file-lines"></i>
+                    </div>
+                    {% endif %}
+                    <div class="min-w-0 flex-1">
+                        <p class="font-medium text-gray-800 truncate">{{ post.title }}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">
+                            {{ post.author_name }} · {{ post.created_at.strftime('%b %d, %Y') }}
+                            {% if post.is_published %}
+                            <span class="text-emerald-600">· Published</span>
+                            {% else %}
+                            <span class="text-amber-600">· Draft</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <span class="text-xs text-gray-400">{{ post.view_count }} views</span>
+                </div>
+                {% endfor %}
             </div>
-            <div class="flex justify-between items-center p-4 bg-yellow-50 rounded border border-yellow-200">
-                <span>Pending Approval</span>
-                <span class="font-bold text-lg text-orange-600">{{ stats.pending_comments }}</span>
-            </div>
-            <a href="{{ url_for('admin.comments_list') }}" class="block text-center mt-4 p-4 bg-[#141495] text-white rounded hover:opacity-90 font-semibold transition">
-                Manage Comments
-            </a>
+            {% else %}
+            <p class="text-gray-500 text-center py-8">No blog posts yet.</p>
+            {% endif %}
         </div>
     </div>
-    
+
+    <!-- Recent Comments -->
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+        <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                <i class="fa-solid fa-comment text-[#141495]"></i> Recent Comments
+            </h3>
+            <a href="{{ url_for('admin.comments_list') }}" class="text-sm text-[#141495] hover:underline">View all</a>
+        </div>
+        <div class="p-6">
+            {% if recent_comments %}
+            <div class="space-y-4">
+                {% for comment in recent_comments %}
+                <div class="p-4 rounded-lg border border-gray-100">
+                    <div class="flex items-start justify-between mb-2">
+                        <div>
+                            <span class="font-medium text-gray-800">{{ comment.author_name }}</span>
+                            <span class="text-xs text-gray-500 ml-2">{{ comment.created_at.strftime('%b %d, %Y') }}</span>
+                        </div>
+                        {% if not comment.is_approved %}
+                        <span class="text-xs font-medium px-2 py-1 rounded-full bg-amber-100 text-amber-700">Pending</span>
+                        {% else %}
+                        <span class="text-xs font-medium px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">Approved</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-sm text-gray-600 line-clamp-2">{{ comment.content }}</p>
+                    {% if comment.blog_post %}
+                    <p class="text-xs text-gray-400 mt-2">on <a href="{{ url_for('public.blog_detail', slug=comment.blog_post.slug) }}" class="text-[#141495] hover:underline">{{ comment.blog_post.title }}</a></p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500 text-center py-8">No comments yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Grid: Recent Subscribers + Sent Campaigns + Quick Actions -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+    <!-- Recent Subscribers -->
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+        <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                <i class="fa-solid fa-user-plus text-[#141495]"></i> Recent Subscribers
+            </h3>
+            <a href="{{ url_for('admin.subscribers_list') }}" class="text-sm text-[#141495] hover:underline">View all</a>
+        </div>
+        <div class="p-6">
+            {% if recent_subscribers %}
+            <div class="space-y-3">
+                {% for sub in recent_subscribers %}
+                <div class="flex items-center justify-between">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-medium text-gray-800 truncate">{{ sub.email }}</p>
+                        <p class="text-xs text-gray-500">{{ sub.created_at.strftime('%b %d, %Y') }}</p>
+                    </div>
+                    {% if sub.is_active %}
+                    <span class="text-emerald-500 text-xs"><i class="fa-solid fa-circle"></i></span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500 text-center py-8">No subscribers yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sent Campaigns -->
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+        <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                <i class="fa-solid fa-paper-plane text-[#141495]"></i> Sent Campaigns
+            </h3>
+            <a href="{{ url_for('admin.newsletter_sent') }}" class="text-sm text-[#141495] hover:underline">View all</a>
+        </div>
+        <div class="p-6">
+            {% if recent_campaigns %}
+            <div class="space-y-3">
+                {% for campaign in recent_campaigns %}
+                <div class="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-medium text-gray-800 truncate">{{ campaign.subject }}</p>
+                        <p class="text-xs text-gray-500">
+                            {{ campaign.sent_at.strftime('%b %d, %Y') if campaign.sent_at else '' }}
+                            · {{ campaign.sent_count }} recipients
+                        </p>
+                    </div>
+                    <span class="text-emerald-600 text-xs font-medium">{{ 'Sent' if campaign.is_sent else 'Draft' }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500 text-center py-8">No campaigns sent yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
     <!-- Quick Actions -->
-    <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-xl font-bold text-[#141495] mb-4">Quick Actions</h3>
-        <div class="space-y-3">
-            <a href="{{ url_for('admin.blog_create') }}" class="block w-full px-4 py-3 bg-[#141495] text-white rounded hover:opacity-90 transition text-center font-semibold">
-                <i class="text-xl fa-solid fa-file-pen"></i> Create Blog Post
-            </a>
-            <a href="{{ url_for('admin.service_create') }}" class="block w-full px-4 py-3 border-2 border-[#141495] text-[#141495] rounded hover:bg-[#141495] hover:text-white transition text-center font-semibold">
-                <i class="text-xl fa-solid fa-briefcase"></i> Add Service
-            </a>
-            <a href="{{ url_for('admin.team_create') }}" class="block w-full px-4 py-3 border-2 border-[#141495] text-[#141495] rounded hover:bg-[#141495] hover:text-white transition text-center font-semibold">
-                <i class="text-xl fa-solid fa-users"></i> Add Team Member
-            </a>
-            <a href="{{ url_for('admin.site_settings') }}" class="block w-full px-4 py-3 border-2 border-[#141495] text-[#141495] rounded hover:bg-[#141495] hover:text-white transition text-center font-semibold">
-                <i class="text-xl fa-solid fa-gear"></i> Site Settings
-            </a>
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
+        <div class="px-6 py-5 border-b border-gray-100">
+            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                <i class="fa-solid fa-bolt text-[#141495]"></i> Quick Actions
+            </h3>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 gap-3">
+                <a href="{{ url_for('admin.blog_create') }}"
+                   class="flex items-center gap-3 px-5 py-4 bg-[#141495] text-white rounded-xl hover:bg-[#0f0f7a] transition font-medium">
+                    <i class="fa-solid fa-plus-circle text-xl"></i>
+                    <span>Create Blog Post</span>
+                </a>
+
+                <a href="{{ url_for('admin.newsletter_create') }}"
+                   class="flex items-center gap-3 px-5 py-4 border-2 border-[#141495] text-[#141495] rounded-xl hover:bg-[#141495] hover:text-white transition font-medium">
+                    <i class="fa-solid fa-newspaper text-xl"></i>
+                    <span>New Newsletter</span>
+                </a>
+
+                <a href="{{ url_for('admin.newsletter_send') }}"
+                   class="flex items-center gap-3 px-5 py-4 border-2 border-[#141495] text-[#141495] rounded-xl hover:bg-[#141495] hover:text-white transition font-medium">
+                    <i class="fa-solid fa-paper-plane text-xl"></i>
+                    <span>Send Newsletter</span>
+                </a>
+
+                <a href="{{ url_for('admin.hero_slide_create') }}"
+                   class="flex items-center gap-3 px-5 py-4 border-2 border-[#141495] text-[#141495] rounded-xl hover:bg-[#141495] hover:text-white transition font-medium">
+                    <i class="fa-solid fa-image text-xl"></i>
+                    <span>Add Hero Slide</span>
+                </a>
+
+                <a href="{{ url_for('admin.service_create') }}"
+                   class="flex items-center gap-3 px-5 py-4 border-2 border-[#141495] text-[#141495] rounded-xl hover:bg-[#141495] hover:text-white transition font-medium">
+                    <i class="fa-solid fa-briefcase text-xl"></i>
+                    <span>Add Service</span>
+                </a>
+
+                <a href="{{ url_for('admin.team_create') }}"
+                   class="flex items-center gap-3 px-5 py-4 border-2 border-[#141495] text-[#141495] rounded-xl hover:bg-[#141495] hover:text-white transition font-medium">
+                    <i class="fa-solid fa-user-plus text-xl"></i>
+                    <span>Add Team Member</span>
+                </a>
+
+                <a href="{{ url_for('admin.site_settings') }}"
+                   class="flex items-center gap-3 px-5 py-4 border-2 border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition font-medium">
+                    <i class="fa-solid fa-gear text-xl"></i>
+                    <span>Site Settings</span>
+                </a>
+            </div>
         </div>
     </div>
 </div>
