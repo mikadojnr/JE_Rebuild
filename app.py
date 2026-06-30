@@ -5,197 +5,209 @@ Flask Application Entry Point
 
 from datetime import datetime
 import os
+
 from flask import Flask, render_template, request
-from extensions import db, login_manager, mail, migrate
 from dotenv import load_dotenv
+
+from extensions import db, login_manager, mail, migrate
+
+from sqlalchemy import inspect
+from sqlalchemy.exc import SQLAlchemyError
 
 # Load environment variables
 load_dotenv()
 
-# Initialize extensions
-# db = SQLAlchemy()
-# login_manager = LoginManager()
-# mail = Mail()
+
+# =========================================================
+# DEFAULT DATA INITIALIZATION (MUST BE ABOVE create_app)
+# =========================================================
+def init_default_data(app):
+    """Initialize default site settings if the table exists."""
+
+    from models import SiteSettings
+
+    with app.app_context():
+        try:
+            inspector = inspect(db.engine)
+
+            # Table not created yet (migrations not run)
+            if "site_settings" not in inspector.get_table_names():
+                return
+
+            if SiteSettings.query.first() is None:
+
+                default_settings = SiteSettings(
+                    company_name='John & Eniola Consultancy',
+                    company_description='Your trusted partner in financial excellence. We provide comprehensive financial solutions that drive business success and sustainable growth.',
+                    phone_primary='+2349096702222',
+                    phone_secondary='+2349133333478',
+                    email='info@johneniola.com',
+                    address='40, 1st Crescent, Lugbe FHA, Abuja, Federal Capital Territory, Nigeria',
+                    logo_image_path='/static/images/logo.png',
+                    logo_dark_image_path='/static/images/logo-dark.png',
+                    favicon_path='/static/images/favicon.ico',
+                    hero_title='Financial Excellence Redefined',
+                    hero_subtitle='Empowering businesses with strategic financial solutions, comprehensive tax planning, and expert advisory services that drive sustainable growth.',
+                    hero_btn_text='Schedule Consultation',
+                    hero_btn_url='/contact',
+                    social_links={
+                        'twitter': 'https://twitter.com/je_consultancy/',
+                        'facebook': 'https://www.facebook.com/people/John-Eniola-Consultancy-Limited/61552669754142/',
+                        'linkedin': 'https://www.linkedin.com/company/johneniolaltd?_l=en_US',
+                        'instagram': 'https://www.instagram.com/je_consultancy/'
+                    },
+                    meta_title='John & Eniola Consultancy',
+                    meta_description='Your trusted partner in financial excellence. We provide comprehensive financial solutions that drive business success and sustainable growth.',
+                    og_image='/static/images/og-default.jpg',
+                )
+
+                db.session.add(default_settings)
+                db.session.commit()
+
+        except SQLAlchemyError:
+            db.session.rollback()
 
 
-
-
+# =========================================================
+# APPLICATION FACTORY
+# =========================================================
 def create_app():
     """Application factory pattern"""
+
     app = Flask(__name__, static_folder='static', static_url_path='/static')
-    
-    # Configuration
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-    
-    # Database configuration
+
+    # -------------------------
+    # CONFIG
+    # -------------------------
+    app.config['SECRET_KEY'] = os.getenv(
+        'SECRET_KEY',
+        'dev-secret-key-change-in-production'
+    )
+
     db_user = os.getenv('DB_USER', 'root')
     db_password = os.getenv('DB_PASSWORD', '')
     db_host = os.getenv('DB_HOST', 'localhost')
     db_port = os.getenv('DB_PORT', '3306')
     db_name = os.getenv('DB_NAME', 'john_eniola_consultancy')
-    
-    # Use PyMySQL for MySQL connection
+
     app.config['SQLALCHEMY_DATABASE_URI'] = (
         f'mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
     )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    
-    # === MAIL CONFIGURATION ===
+
+    # -------------------------
+    # MAIL CONFIG
+    # -------------------------
     app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
     app.config['MAIL_PORT'] = 465
     app.config['MAIL_USE_SSL'] = True
     app.config['MAIL_USE_TLS'] = False
 
-    app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-    
-    # IMPORTANT: Set default sender correctly
-    app.config['MAIL_DEFAULT_SENDER'] = 'John & Eniola Consultancy <' + os.getenv('MAIL_USERNAME') + '>'
+    mail_username = os.getenv("MAIL_USERNAME", "")
 
-    # Debug settings (remove in production)
+    app.config['MAIL_USERNAME'] = mail_username
+    app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+
+    app.config['MAIL_DEFAULT_SENDER'] = (
+        f"John & Eniola Consultancy <{mail_username}>"
+    )
+
     app.config['MAIL_DEBUG'] = True
     app.config['MAIL_SUPPRESS_SEND'] = False
 
-    # Celery Config
-    app.config['CELERY_BROKER_URL'] = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-    app.config['CELERY_RESULT_BACKEND'] = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
-
-    # Initialize Celery
+    # -------------------------
+    # CELERY
+    # -------------------------
     from celery_config import make_celery
+
     celery = make_celery(app)
     app.celery = celery
 
-    # === CELERY CONFIGURATION ===
-    # app.config['CELERY_BROKER_URL'] = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-    # app.config['CELERY_RESULT_BACKEND'] = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
-    # app.config['CELERY_TASK_SERIALIZER'] = 'json'
-    # app.config['CELERY_RESULT_SERIALIZER'] = 'json'
-    # app.config['CELERY_ACCEPT_CONTENT'] = ['json']
-    
-    # Initialize extensions with app
+    # -------------------------
+    # INIT EXTENSIONS
+    # -------------------------
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'admin.login'
     mail.init_app(app)
     migrate.init_app(app, db)
 
-
-    from celery_config import celery as celery_app, make_celery
-    celery = make_celery(app)           # Configure it
-    app.celery = celery                 # Optional: attach to app
-
-
+    # -------------------------
+    # IMPORTS (AFTER INIT)
+    # -------------------------
     from models import SiteSettings
-
     from forms import SubscribeNewsletterForm
 
+    # -------------------------
+    # CONTEXT PROCESSORS
+    # -------------------------
     @app.context_processor
     def inject_now():
-        return {
-            "now": datetime.now()
-        }
-
-    @app.context_processor
-    def inject_newsletter_form():
-        """Safely inject newsletter subscription form for all templates"""
-        try:
-            # Only process form data on POST requests
-            if request.method == 'POST':
-                return {'newsletter_form': SubscribeNewsletterForm()}
-            else:
-                return {'newsletter_form': SubscribeNewsletterForm(formdata=None)}
-        except:
-            # Fallback for any edge cases (like 404 pages)
-            return {'newsletter_form': SubscribeNewsletterForm(formdata=None)}
+        return {"now": datetime.now()}
 
     @app.context_processor
     def inject_globals():
+        return {'current_year': datetime.now().year}
 
-        return {
-            'current_year': datetime.now().year
-        }
+    @app.context_processor
+    def inject_newsletter_form():
+        try:
+            if request.method == 'POST':
+                return {'newsletter_form': SubscribeNewsletterForm()}
+            return {'newsletter_form': SubscribeNewsletterForm(formdata=None)}
+        except Exception:
+            return {'newsletter_form': SubscribeNewsletterForm(formdata=None)}
 
     @app.context_processor
     def inject_site_settings():
-        """Inject global site settings into all templates"""
+        """Safe site settings injection"""
+        try:
+            inspector = inspect(db.engine)
 
-        site_settings = SiteSettings.query.first()
+            if "site_settings" not in inspector.get_table_names():
+                return {"site_settings": None}
 
-        return dict(site_settings=site_settings)
-    
-    # User loader for Flask-Login
+            return {"site_settings": SiteSettings.query.first()}
+
+        except SQLAlchemyError:
+            return {"site_settings": None}
+
+    # -------------------------
+    # LOGIN MANAGER
+    # -------------------------
     @login_manager.user_loader
     def load_user(user_id):
         from models import User
         return User.query.get(int(user_id))
-    
-    # Register blueprints
+
+    # -------------------------
+    # BLUEPRINTS
+    # -------------------------
     from routes.public_routes import public_bp
     from routes.admin_routes import admin_bp
-    
+
     app.register_blueprint(public_bp)
     app.register_blueprint(admin_bp, url_prefix='/admin')
 
-
-
-
+    # -------------------------
+    # ERROR HANDLERS
+    # -------------------------
     @app.errorhandler(404)
     def not_found_error(error):
-        """404 Page Not Found"""
         return render_template('errors/404.html'), 404
-
 
     @app.errorhandler(500)
     def internal_error(error):
-        """500 Internal Server Error"""
-
         db.session.rollback()
-
         return render_template('errors/500.html'), 500
-    
+
     @app.errorhandler(400)
     def bad_request_error(error):
-        """Handle bad request / JSON decode errors gracefully"""
         return render_template('errors/400.html'), 400
-    
-    # Create tables and seed data
-    with app.app_context():
-        from models import User, SiteSettings, Service
-        # db.create_all()
-        init_default_data()
-    
+
+    # -------------------------
+    # SEED DATA (SAFE)
+    # -------------------------
+    init_default_data(app)
+
     return app
-
-
-
-def init_default_data():
-    """Initialize default site settings if they don't exist"""
-    from models import SiteSettings
-    
-    if SiteSettings.query.first() is None:
-        default_settings = SiteSettings(
-            company_name='John & Eniola Consultancy',
-            company_description='Your trusted partner in financial excellence. We provide comprehensive financial solutions that drive business success and sustainable growth.',
-            phone_primary='+2349096702222',
-            phone_secondary='+2349133333478',
-            email='info@johneniola.com',
-            address='40, 1st Crescent, Lugbe FHA, Abuja, Federal Capital Territory, Nigeria',
-            logo_image_path='/static/images/logo.png',
-            logo_dark_image_path='/static/images/logo-dark.png',
-            favicon_path='/static/images/favicon.ico',
-            hero_title='Financial Excellence Redefined',
-            hero_subtitle='Empowering businesses with strategic financial solutions, comprehensive tax planning, and expert advisory services that drive sustainable growth.',
-            hero_btn_text='Schedule Consultation',
-            hero_btn_url='/contact',
-            social_links={
-                'twitter': 'https://twitter.com/je_consultancy/',
-                'facebook': 'https://www.facebook.com/people/John-Eniola-Consultancy-Limited/61552669754142/',
-                'linkedin': 'https://www.linkedin.com/company/johneniolaltd?_l=en_US',
-                'instagram': 'https://www.instagram.com/je_consultancy/'
-            },
-            meta_title='John & Eniola Consultancy',
-            meta_description='Your trusted partner in financial excellence. We provide comprehensive financial solutions that drive business success and sustainable growth.',
-            og_image='/static/images/og-default.jpg',
-        )
-        db.session.add(default_settings)
-        db.session.commit()
