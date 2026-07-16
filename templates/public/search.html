@@ -39,7 +39,7 @@
                     <a href="{{ url_for('public.blog_detail', slug=post.slug) }}" class="block bg-gray-50 rounded-xl p-5 hover:bg-gray-100 transition border border-gray-100">
                         <div class="flex items-start gap-4">
                             {% if post.featured_image %}
-                            <img src="{{ post.featured_image }}" alt="" class="w-20 h-16 rounded-lg object-cover flex-shrink-0">
+                            <img src="{{ post.featured_image }}" alt="" class="w-20 rounded-lg object-cover flex-shrink-0">
                             {% endif %}
                             <div class="min-w-0 flex-1">
                                 <h3 class="font-semibold text-gray-900 mb-1">{{ post.title }}</h3>
@@ -90,7 +90,7 @@
                     <a href="{{ url_for('public.newsletter_detail', slug=nl.slug) }}" class="block bg-gray-50 rounded-xl p-5 hover:bg-gray-100 transition border border-gray-100">
                         <div class="flex items-start gap-4">
                             {% if nl.featured_image %}
-                            <img src="{{ nl.featured_image }}" alt="" class="w-20 h-16 rounded-lg object-cover flex-shrink-0">
+                            <img src="{{ nl.featured_image }}" alt="" class="w-20 rounded-lg object-cover flex-shrink-0">
                             {% endif %}
                             <div class="min-w-0 flex-1">
                                 <h3 class="font-semibold text-gray-900 mb-1">{{ nl.title }}</h3>

@@ -80,21 +80,27 @@ function copyLink(url) {
             event.target.innerHTML = originalText;
         }, 2000);
     }).catch(err => {
-        alert('Failed to copy link');
+        showToast('Failed to copy link', 'error');
     });
 }
 
 // Resend link
-function resendLink(id) {
-    if (confirm("Resend testimonial submission link?")) {
-        fetch(`/admin/testimonials/links/${id}/resend`, { 
-            method: 'POST',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(r => r.json())
-        .then(data => alert(data.message || 'Link resent!'))
-        .catch(() => alert("Failed to resend link"));
-    }
+async function resendLink(id) {
+    const confirmed = await showConfirmModal({
+        title: 'Resend Link',
+        message: 'A new testimonial submission link will be sent via email. This cannot be retracted.',
+        confirmText: 'Yes, Resend',
+        type: 'warning'
+    });
+    if (!confirmed) return;
+
+    fetch(`/admin/testimonials/links/${id}/resend`, { 
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(data => showToast(data.message || 'Link resent!', 'success'))
+    .catch(() => showToast('Failed to resend link', 'error'));
 }
 </script>
 {% endblock %}

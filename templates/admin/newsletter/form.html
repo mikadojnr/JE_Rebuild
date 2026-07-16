@@ -34,7 +34,7 @@
                         {% if newsletter and newsletter.featured_image %}
                         <div class="current-image">
                             <p class="text-sm text-gray-500 mb-2">Current image:</p>
-                            <img src="{{ newsletter.featured_image }}" alt="Current featured image" class="w-full h-44 object-cover rounded-lg border border-gray-200">
+                            <img src="{{ newsletter.featured_image }}" alt="Current featured image" class="w-full object-cover rounded-lg border border-gray-200">
                         </div>
                         {% endif %}
                         <div class="upload-area relative">
@@ -42,7 +42,7 @@
                         </div>
                         <div id="image-preview" class="hidden">
                             <p class="text-sm text-gray-500 mb-2">New image preview:</p>
-                            <img id="preview-img" src="#" alt="New image preview" class="w-full h-44 object-cover rounded-lg border border-dashed border-[#141495]">
+                            <img id="preview-img" src="#" alt="New image preview" class="w-full object-cover rounded-lg border border-dashed border-[#141495]">
                         </div>
                     </div>
                 </div>

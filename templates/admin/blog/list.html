@@ -70,7 +70,7 @@
                     </td>
                     <td class="px-6 py-4">
                         {% if post.featured_image %}
-                        <img src="{{ post.featured_image }}" alt="Thumbnail" class="h-12 w-16 object-cover rounded">
+                        <img src="{{ post.featured_image }}" alt="Thumbnail" class="w-16 object-cover rounded">
                         {% else %}
                         <div class="w-16 h-12 bg-gray-200 rounded flex items-center justify-center text-gray-500">
                             <i class="fa fa-image"></i>
@@ -110,7 +110,7 @@
             <option value="unpublish">Unpublish</option>
             <option value="delete">Delete</option>
         </select>
-        <button type="submit" class="px-6 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition" onclick="return confirm('Apply bulk action to selected posts?')">
+        <button type="submit" class="px-6 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition">
             Apply
         </button>
     </div>
@@ -142,6 +142,34 @@
 <script>
     document.getElementById('select-all')?.addEventListener('change', function() {
         document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = this.checked);
+    });
+
+    document.getElementById('bulk-form')?.addEventListener('submit', async function(e) {
+        const action = this.querySelector('[name="action"]').value;
+        const checked = this.querySelectorAll('.row-checkbox:checked');
+
+        if (!action || checked.length === 0) return;
+
+        if (action === 'delete') {
+            e.preventDefault();
+            const confirmed = await showConfirmModal({
+                title: 'Bulk Delete',
+                message: `This will permanently delete ${checked.length} post(s). This action cannot be undone.`,
+                confirmText: 'Yes, Delete All',
+                type: 'danger'
+            });
+            if (confirmed) this.submit();
+        } else {
+            e.preventDefault();
+            const label = action.charAt(0).toUpperCase() + action.slice(1);
+            const confirmed = await showConfirmModal({
+                title: `${label} Posts`,
+                message: `${label} ${checked.length} selected post(s)?`,
+                confirmText: `Yes, ${label}`,
+                type: action === 'publish' ? 'success' : 'warning'
+            });
+            if (confirmed) this.submit();
+        }
     });
 </script>
 {% endblock %}

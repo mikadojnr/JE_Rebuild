@@ -93,7 +93,7 @@
                     <label class="block text-sm font-semibold text-gray-700">Light Logo</label>
                     {% if settings.logo_image_path %}
                     <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-center gap-4">
-                        <img src="{{ settings.logo_image_path }}" alt="Current logo" class="h-14 object-contain">
+                        <img src="{{ settings.logo_image_path }}" alt="Current logo" class="object-contain">
                         <span class="text-xs text-gray-400 truncate">{{ settings.logo_image_path.split('/')[-1] }}</span>
                     </div>
                     {% endif %}
@@ -101,7 +101,7 @@
                         {{ form.logo_image(class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#141495] file:text-white hover:file:bg-[#0f0f7a] file:transition file:cursor-pointer cursor-pointer") }}
                     </div>
                     <div id="logo-preview" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-4">
-                        <img id="logo-preview-img" src="#" alt="Preview" class="h-14 object-contain">
+                        <img id="logo-preview-img" src="#" alt="Preview" class="object-contain">
                         <span class="text-xs text-blue-600">New logo preview</span>
                     </div>
                 </div>
@@ -109,7 +109,7 @@
                     <label class="block text-sm font-semibold text-gray-700">Dark Logo <span class="text-gray-400 font-normal">(for dark backgrounds)</span></label>
                     {% if settings.logo_dark_image_path %}
                     <div class="bg-gray-900 border border-gray-700 rounded-xl p-4 flex items-center gap-4">
-                        <img src="{{ settings.logo_dark_image_path }}" alt="Current dark logo" class="h-14 object-contain">
+                        <img src="{{ settings.logo_dark_image_path }}" alt="Current dark logo" class="object-contain">
                         <span class="text-xs text-gray-400 truncate">{{ settings.logo_dark_image_path.split('/')[-1] }}</span>
                     </div>
                     {% endif %}
@@ -117,7 +117,7 @@
                         {{ form.logo_dark_image(class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[#141495] file:text-white hover:file:bg-[#0f0f7a] file:transition file:cursor-pointer cursor-pointer") }}
                     </div>
                     <div id="logo-dark-preview" class="hidden bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-4">
-                        <img id="logo-dark-preview-img" src="#" alt="Preview" class="h-14 object-contain">
+                        <img id="logo-dark-preview-img" src="#" alt="Preview" class="object-contain">
                         <span class="text-xs text-blue-600">New dark logo preview</span>
                     </div>
                 </div>
@@ -204,7 +204,7 @@
                     <p class="text-xs text-gray-400 mt-1">The image shown when your site is shared on social media (1200×630px recommended)</p>
                     <div id="og-preview" class="hidden mt-3 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden max-w-md">
                         <div class="bg-gray-100 h-36 flex items-center justify-center">
-                            <img id="og-preview-img" src="#" alt="OG preview" class="w-full h-full object-cover">
+                            <img id="og-preview-img" src="#" alt="OG preview" class="w-full object-cover">
                         </div>
                         <div class="p-3">
                             <p class="text-xs text-gray-500 truncate" id="og-preview-url">{{ request.host }}</p>

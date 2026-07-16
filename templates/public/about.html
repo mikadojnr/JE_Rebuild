@@ -42,7 +42,7 @@
                 </p>
             </div>
             <div class="rounded-lg overflow-hidden h-96 bg-gradient-to-br from-[#141495] to-[#4d5dd9] flex items-center justify-center">
-                <img src="{{ url_for('static', filename='images/future.jpg') }}" alt="Team Meeting" class="w-full h-full object-cover">
+                <img src="{{ url_for('static', filename='images/future.jpg') }}" alt="Team Meeting" class="w-full object-cover">
             </div>
         </div>
     </div>
@@ -143,7 +143,7 @@
             {% for member in team_members %}
             <div class="card text-center group">
                 {% if member.image %}
-                <img src="{{ member.image }}" alt="{{ member.name }}" class="w-full h-64 object-cover rounded-lg mb-4 group-hover:scale-105 transition">
+                <img src="{{ member.image }}" alt="{{ member.name }}" class="w-full object-cover rounded-lg mb-4 group-hover:scale-105 transition">
                 {% else %}
                 <div class="w-full h-64 bg-gradient-to-br from-[#141495] to-[#4d5dd9] rounded-lg flex items-center justify-center mb-4 text-6xl text-white">
                     <i class="fa-solid fa-user"></i>

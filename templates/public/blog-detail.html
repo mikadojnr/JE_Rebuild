@@ -53,6 +53,9 @@
         <h1 class="text-5xl md:text-6xl font-bold mb-6">{{ post.title }}</h1>
         <div class="flex items-center gap-4 text-gray-200">
             <span>{{ post.published_at.strftime('%B %d, %Y') if post.published_at else 'Unpublished' }}</span>
+            <span>&middot;</span>
+            <span>{{ post.reading_time or ((post.content|striptags|length / 200)|int) }} min read</span>
+            <span>&middot;</span>
             <span>By {{ post.author_name }}</span>
         </div>
     </div>
@@ -68,6 +71,33 @@
                 {% if post.featured_image %}
                 <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="w-full rounded-md mb-8 object-cover">
                 {% endif %}
+
+                <!-- Audio Reader -->
+                <div id="audio-reader" class="mb-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <button id="audio-play-btn" onclick="toggleAudio()" class="w-10 h-10 rounded-full bg-[#141495] text-white flex items-center justify-center hover:bg-[#0800f0] transition flex-shrink-0" title="Listen to this article">
+                                <i class="fa-solid fa-headphones text-sm"></i>
+                            </button>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-800">Listen to this article</p>
+                                <p id="audio-status" class="text-xs text-gray-500">Click play to start listening</p>
+                            </div>
+                        </div>
+                        <div id="audio-controls" class="hidden items-center gap-2">
+                            <button onclick="changeRate()" id="audio-rate-btn" class="text-xs px-2 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition font-medium" title="Change speed">1x</button>
+                            <button onclick="stopAudio()" class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center hover:bg-red-200 transition" title="Stop">
+                                <i class="fa-solid fa-stop text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="audio-progress-wrap" class="hidden mt-3">
+                        <div class="w-full bg-gray-200 rounded-full h-1.5">
+                            <div id="audio-progress" class="bg-[#141495] h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="audio-text-source" style="display:none">{{ post.content|striptags }}</div>
                 
                 <div class="prose max-w-none mb-5 border-t pt-5">
                     {{ post.content | safe }}
@@ -260,9 +290,129 @@ function copyPageLink(text) {
     navigator.clipboard.writeText(shareText).then(() => {
         alert('Link copied! Share it on Instagram.');
     }).catch(() => {
-        alert('Please copy the URL from the address bar to share on Instagram.');
+        alert('Please copy the URL from the address bar to share on.');
     });
 }
+
+// ---- Audio Reader (Web Speech API) ----
+let audioUtterance = null;
+let audioPlaying = false;
+let audioPaused = false;
+let audioRates = [1, 1.25, 1.5, 1.75, 2];
+let audioRateIndex = 0;
+
+function toggleAudio() {
+    if (audioPlaying && !audioPaused) {
+        window.speechSynthesis.pause();
+        audioPaused = true;
+        updateAudioUI('paused');
+    } else if (audioPaused) {
+        window.speechSynthesis.resume();
+        audioPaused = false;
+        updateAudioUI('playing');
+    } else {
+        startAudio();
+    }
+}
+
+function startAudio() {
+    window.speechSynthesis.cancel();
+
+    var text = document.getElementById('audio-text-source').textContent.trim();
+    if (!text) return;
+
+    audioUtterance = new SpeechSynthesisUtterance(text);
+    audioUtterance.rate = audioRates[audioRateIndex];
+    audioUtterance.pitch = 1;
+    audioUtterance.lang = 'en-NG';
+
+    var voices = window.speechSynthesis.getVoices();
+    var preferred = voices.find(function(v) { return v.lang === 'en-NG' && v.name.includes('Google'); })
+        || voices.find(function(v) { return v.lang === 'en-NG'; })
+        || voices.find(function(v) { return v.lang.startsWith('en'); });
+    if (preferred) audioUtterance.voice = preferred;
+
+    audioUtterance.onstart = function() {
+        audioPlaying = true;
+        audioPaused = false;
+        updateAudioUI('playing');
+    };
+
+    audioUtterance.onend = function() {
+        audioPlaying = false;
+        audioPaused = false;
+        updateAudioUI('stopped');
+        document.getElementById('audio-progress').style.width = '100%';
+    };
+
+    audioUtterance.onerror = function() {
+        audioPlaying = false;
+        audioPaused = false;
+        updateAudioUI('stopped');
+    };
+
+    audioUtterance.onboundary = function(e) {
+        if (e.name === 'word' && audioUtterance.text) {
+            var pct = Math.min(100, Math.round((e.charIndex / audioUtterance.text.length) * 100));
+            document.getElementById('audio-progress').style.width = pct + '%';
+        }
+    };
+
+    window.speechSynthesis.speak(audioUtterance);
+}
+
+function stopAudio() {
+    window.speechSynthesis.cancel();
+    audioPlaying = false;
+    audioPaused = false;
+    updateAudioUI('stopped');
+    document.getElementById('audio-progress').style.width = '0%';
+}
+
+function changeRate() {
+    audioRateIndex = (audioRateIndex + 1) % audioRates.length;
+    document.getElementById('audio-rate-btn').textContent = audioRates[audioRateIndex] + 'x';
+    if (audioPlaying) {
+        window.speechSynthesis.cancel();
+        startAudio();
+    }
+}
+
+function updateAudioUI(state) {
+    var btn = document.getElementById('audio-play-btn');
+    var controls = document.getElementById('audio-controls');
+    var status = document.getElementById('audio-status');
+    var progressWrap = document.getElementById('audio-progress-wrap');
+
+    controls.classList.remove('hidden');
+    controls.classList.add('flex');
+    progressWrap.classList.remove('hidden');
+
+    if (state === 'playing') {
+        btn.innerHTML = '<i class="fa-solid fa-pause text-sm"></i>';
+        status.textContent = 'Reading...';
+    } else if (state === 'paused') {
+        btn.innerHTML = '<i class="fa-solid fa-play text-sm"></i>';
+        status.textContent = 'Paused';
+    } else {
+        btn.innerHTML = '<i class="fa-solid fa-headphones text-sm"></i>';
+        status.textContent = 'Click play to start listening';
+        controls.classList.add('hidden');
+        controls.classList.remove('flex');
+        progressWrap.classList.add('hidden');
+    }
+}
+
+// Preload voices
+if (window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = function() {};
+    window.speechSynthesis.getVoices();
+}
+
+// Stop audio on page navigation
+window.addEventListener('beforeunload', function() {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+});
 </script>
 {% endblock %}
 

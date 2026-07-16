@@ -87,8 +87,14 @@
 
 {% block extra_js %}
 <script>
-function quickSendNewsletter(id) {
-    if (!confirm("Send this newsletter to all active subscribers?")) return;
+async function quickSendNewsletter(id) {
+    const confirmed = await showConfirmModal({
+        title: 'Send Newsletter',
+        message: 'This will send this newsletter to all active subscribers. This action cannot be undone.',
+        confirmText: 'Yes, Send Now',
+        type: 'info'
+    });
+    if (!confirmed) return;
 
     fetch(`/admin/newsletter/${id}/send`, {
         method: 'POST',
@@ -96,10 +102,10 @@ function quickSendNewsletter(id) {
     })
     .then(r => r.json())
     .then(data => {
-        alert(data.message);
+        showToast(data.message, data.success ? 'success' : 'error');
         if (data.success) location.reload();
     })
-    .catch(() => alert("Failed to send"));
+    .catch(() => showToast('Failed to send', 'error'));
 }
 </script>
 {% endblock %}

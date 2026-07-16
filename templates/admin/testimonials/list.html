@@ -69,15 +69,21 @@
 
 {% block extra_js %}
 <script>
-function approveTestimonial(id) {
-    if (confirm("Approve this testimonial for public display?")) {
-        fetch(`/admin/testimonials/${id}/approve`, { method: 'POST' })
-        .then(r => r.json())
-        .then(data => {
-            alert(data.message || "Approved!");
-            location.reload();
-        });
-    }
+async function approveTestimonial(id) {
+    const confirmed = await showConfirmModal({
+        title: 'Approve Testimonial',
+        message: 'This testimonial will be displayed publicly on the website. This cannot be undone.',
+        confirmText: 'Yes, Approve',
+        type: 'success'
+    });
+    if (!confirmed) return;
+
+    fetch(`/admin/testimonials/${id}/approve`, { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+        showToast(data.message || 'Approved!', 'success');
+        location.reload();
+    });
 }
 </script>
 {% endblock %}

@@ -5,6 +5,7 @@ Flask Application Entry Point
 
 from datetime import datetime
 import os
+import sys
 
 from flask import Flask, render_template, request
 from dotenv import load_dotenv
@@ -209,5 +210,68 @@ def create_app():
     # SEED DATA (SAFE)
     # -------------------------
     init_default_data(app)
+
+    # -------------------------
+    # CLI COMMANDS
+    # -------------------------
+    @app.cli.command("create-admin")
+    def create_admin():
+        """Create an admin user interactively or via arguments."""
+        import getpass
+        from models import User
+
+        with app.app_context():
+            print("=== Create Admin User ===\n")
+
+            username = input("Username: ").strip()
+            if not username:
+                print("Error: Username is required.")
+                sys.exit(1)
+
+            if User.query.filter_by(username=username).first():
+                print(f"Error: User '{username}' already exists.")
+                sys.exit(1)
+
+            email = input("Email: ").strip()
+            if not email:
+                print("Error: Email is required.")
+                sys.exit(1)
+
+            if User.query.filter_by(email=email).first():
+                print(f"Error: Email '{email}' is already registered.")
+                sys.exit(1)
+
+            first_name = input("First name (optional): ").strip()
+            last_name = input("Last name (optional): ").strip()
+
+            while True:
+                password = getpass.getpass("Password: ")
+                if len(password) < 6:
+                    print("Password must be at least 6 characters.")
+                    continue
+                confirm = getpass.getpass("Confirm password: ")
+                if password != confirm:
+                    print("Passwords do not match. Try again.")
+                    continue
+                break
+
+            user = User(
+                username=username,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                is_admin=True,
+                is_active=True,
+            )
+            user.set_password(password)
+
+            db.session.add(user)
+            db.session.commit()
+
+            print(f"\nAdmin user '{username}' created successfully.")
+            print(f"  Email:    {email}")
+            print(f"  Name:     {first_name} {last_name}".strip())
+            print(f"  Admin:    Yes")
+            print(f"  Active:   Yes")
 
     return app

@@ -26,3 +26,18 @@
     </form>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelector('form')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const confirmed = await showConfirmModal({
+        title: 'Send Newsletter',
+        message: 'This will send the newsletter to all active subscribers. This action cannot be undone.',
+        confirmText: 'Yes, Send Now',
+        type: 'info'
+    });
+    if (confirmed) this.submit();
+});
+</script>
+{% endblock %}
