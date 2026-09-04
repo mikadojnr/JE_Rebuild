@@ -10,7 +10,7 @@ import sys
 from flask import Flask, render_template, request
 from dotenv import load_dotenv
 
-from extensions import db, login_manager, mail, migrate
+from extensions import db, login_manager, mail, migrate, csrf, limiter
 
 from sqlalchemy import inspect
 from sqlalchemy.exc import SQLAlchemyError
@@ -85,6 +85,13 @@ def create_app():
         'dev-secret-key-change-in-production'
     )
 
+    if app.config['SECRET_KEY'] == 'dev-secret-key-change-in-production':
+        if os.getenv('FLASK_ENV') == 'production':
+            raise RuntimeError(
+                'SECRET_KEY is still the default placeholder. '
+                'Set a real SECRET_KEY in your .env file before running in production.'
+            )
+
     db_user = os.getenv('DB_USER', 'root')
     db_password = os.getenv('DB_PASSWORD', '')
     db_host = os.getenv('DB_HOST', 'localhost')
@@ -95,6 +102,19 @@ def create_app():
         f'mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
     )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    # -------------------------
+    # SESSION SECURITY
+    # -------------------------
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = os.getenv('FLASK_ENV') == 'production'
+    app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
+
+    # -------------------------
+    # UPLOAD LIMITS
+    # -------------------------
+    app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB
 
     # -------------------------
     # MAIL CONFIG
@@ -113,7 +133,7 @@ def create_app():
         f"John & Eniola Consultancy <{mail_username}>"
     )
 
-    app.config['MAIL_DEBUG'] = True
+    app.config['MAIL_DEBUG'] = False
     app.config['MAIL_SUPPRESS_SEND'] = False
 
     # -------------------------
@@ -132,6 +152,8 @@ def create_app():
     login_manager.login_view = 'admin.login'
     mail.init_app(app)
     migrate.init_app(app, db)
+    csrf.init_app(app)
+    limiter.init_app(app)
 
     # -------------------------
     # IMPORTS (AFTER INIT)
@@ -180,6 +202,20 @@ def create_app():
     def load_user(user_id):
         from models import User
         return User.query.get(int(user_id))
+
+    # -------------------------
+    # SECURITY HEADERS
+    # -------------------------
+    @app.after_request
+    def set_security_headers(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
+        if app.config.get('SESSION_COOKIE_SECURE'):
+            response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        return response
 
     # -------------------------
     # BLUEPRINTS

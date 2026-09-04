@@ -220,6 +220,7 @@
                     <h5 class="mb-3 text-md sm:text-sm md:text-lg font-semibold leading-snug">Subscribe to Newsletter</h5>
                     <form id="newsletter-form" class="space-y-3">
                         {{ newsletter_form.hidden_tag() }}
+                        {{ newsletter_form.website }}
                         {{ newsletter_form.email(class="form-control bg-white text-[#141495] border-none", placeholder="Your email") }}
                         <button type="submit" class="w-full btn-primary hover:text-[#141495]">Subscribe</button>
                     </form>

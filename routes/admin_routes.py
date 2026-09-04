@@ -3,6 +3,7 @@ Admin Routes for John & Eniola Consultancy Dashboard
 """
 
 import secrets
+import time
 from urllib.parse import urljoin, urlparse
 
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, current_app, flash
@@ -21,6 +22,7 @@ from forms import (
     TestimonialForm, SiteSettingsForm, NewsletterCampaignForm, TestimonialLinkForm
 )
 from app import db, mail
+from extensions import limiter, csrf
 from flask_mail import Message
 
 from tasks import send_email_task
@@ -29,9 +31,37 @@ from utils import send_activation_email, send_newsletter_email, send_testimonial
 admin_bp = Blueprint('admin', __name__)
 
 UPLOAD_FOLDER = 'static/uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'svg'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Login brute-force lockout: {key: [timestamp, ...]}
+_login_attempts = {}
+_LOCKOUT_THRESHOLD = 5
+_LOCKOUT_WINDOW = 900  # 15 minutes in seconds
+
+
+def _check_lockout(identifier):
+    """Check if an identifier is locked out due to failed login attempts."""
+    now = time.time()
+    attempts = _login_attempts.get(identifier, [])
+    # Remove expired attempts
+    attempts = [t for t in attempts if now - t < _LOCKOUT_WINDOW]
+    _login_attempts[identifier] = attempts
+    return len(attempts) >= _LOCKOUT_THRESHOLD
+
+
+def _record_failed_attempt(identifier):
+    """Record a failed login attempt."""
+    now = time.time()
+    attempts = _login_attempts.get(identifier, [])
+    attempts.append(now)
+    _login_attempts[identifier] = attempts
+
+
+def _clear_attempts(identifier):
+    """Clear failed login attempts after successful login."""
+    _login_attempts.pop(identifier, None)
 
 
 def allowed_file(filename):
@@ -90,6 +120,7 @@ def admin_required(f):
 
 @admin_bp.route('/media/upload', methods=['POST'])
 @admin_required
+@limiter.limit("30/minute")
 def upload_media():
 
     file = request.files.get('file')
@@ -120,6 +151,7 @@ def upload_media():
 
 
 @admin_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("10/minute")
 def login():
     """Admin Login"""
     if current_user.is_authenticated:
@@ -127,12 +159,24 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        client_ip = request.remote_addr
+        username = form.username.data.strip() if form.username.data else ''
+        lockout_key = f"{client_ip}:{username}"
+
+        if _check_lockout(client_ip) or _check_lockout(lockout_key):
+            flash('Too many failed attempts. Please try again in 15 minutes.', 'danger')
+            return redirect(url_for('admin.login'))
+        
+        user = User.query.filter_by(username=username).first()
         
         if user is None or not user.check_password(form.password.data):
+            _record_failed_attempt(client_ip)
+            _record_failed_attempt(lockout_key)
             flash('Invalid username or password.', 'danger')
             return redirect(url_for('admin.login'))
         
+        _clear_attempts(client_ip)
+        _clear_attempts(lockout_key)
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         
@@ -155,6 +199,7 @@ def logout():
 
 @admin_bp.route('/')
 @admin_required
+@limiter.limit("60/minute")
 def dashboard():
     """Admin Dashboard"""
     now = datetime.utcnow()
@@ -218,6 +263,7 @@ def dashboard():
 
 @admin_bp.route('/analytics')
 @admin_required
+@limiter.limit("60/minute")
 def analytics():
     """Analytics Dashboard"""
     from sqlalchemy import func, cast, Date
@@ -316,6 +362,7 @@ def analytics():
 
 @admin_bp.route('/blog')
 @admin_required
+@limiter.limit("60/minute")
 def blog_list():
     """List all blog posts"""
     page = request.args.get('page', 1, type=int)
@@ -349,6 +396,7 @@ def blog_list():
 
 @admin_bp.route('/blog/create', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("30/minute")
 def blog_create():
     """Create new blog post"""
     form = BlogPostForm()
@@ -395,6 +443,7 @@ def blog_create():
 
 @admin_bp.route('/blog/<int:post_id>/edit', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("30/minute")
 def blog_edit(post_id):
     """Edit blog post"""
     post = BlogPost.query.get_or_404(post_id)
@@ -446,6 +495,7 @@ def blog_edit(post_id):
 
 @admin_bp.route('/blog/<int:post_id>/delete', methods=['POST'])
 @admin_required
+@limiter.limit("30/minute")
 def blog_delete(post_id):
     """Delete blog post"""
     post = BlogPost.query.get_or_404(post_id)
@@ -466,6 +516,7 @@ def blog_delete(post_id):
 
 @admin_bp.route('/blog/bulk-action', methods=['POST'])
 @admin_required
+@limiter.limit("30/minute")
 def blog_bulk_action():
     """Bulk actions on blog posts (publish, unpublish, delete)"""
     action = request.form.get('action')
@@ -502,6 +553,7 @@ def blog_bulk_action():
 
 @admin_bp.route('/services')
 @admin_required
+@limiter.limit("60/minute")
 def services_list():
     """List all services"""
     services = Service.query.order_by(Service.order).all()
@@ -510,6 +562,7 @@ def services_list():
 
 @admin_bp.route('/services/create', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("30/minute")
 def service_create():
     """Create new service"""
     form = ServiceForm()
@@ -539,6 +592,7 @@ def service_create():
 
 @admin_bp.route('/services/<int:service_id>/edit', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("30/minute")
 def service_edit(service_id):
     """Edit service"""
     service = Service.query.get_or_404(service_id)
@@ -575,6 +629,7 @@ def service_edit(service_id):
 
 @admin_bp.route('/services/<int:service_id>/delete', methods=['POST'])
 @admin_required
+@limiter.limit("30/minute")
 def service_delete(service_id):
     """Delete service"""
     service = Service.query.get_or_404(service_id)
@@ -597,6 +652,7 @@ def service_delete(service_id):
 
 @admin_bp.route('/team')
 @admin_required
+@limiter.limit("60/minute")
 def team_list():
     """List all team members"""
     team = TeamMember.query.order_by(TeamMember.order).all()
@@ -605,6 +661,7 @@ def team_list():
 
 @admin_bp.route('/team/create', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("30/minute")
 def team_create():
     """Create new team member"""
     form = TeamMemberForm()
@@ -635,6 +692,7 @@ def team_create():
 
 @admin_bp.route('/team/<int:member_id>/edit', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("30/minute")
 def team_edit(member_id):
     """Edit team member"""
     member = TeamMember.query.get_or_404(member_id)
@@ -669,6 +727,7 @@ def team_edit(member_id):
 
 @admin_bp.route('/team/<int:member_id>/delete', methods=['POST'])
 @admin_required
+@limiter.limit("30/minute")
 def team_delete(member_id):
     """Delete team member"""
     member = TeamMember.query.get_or_404(member_id)
@@ -691,6 +750,7 @@ def team_delete(member_id):
 
 @admin_bp.route('/testimonials')
 @admin_required
+@limiter.limit("60/minute")
 def testimonials_list():
     """List all testimonials"""
     testimonials = Testimonial.query.order_by(Testimonial.order).all()
@@ -699,6 +759,7 @@ def testimonials_list():
 
 @admin_bp.route('/testimonials/create', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("30/minute")
 def testimonial_create():
     """Create new testimonial"""
     form = TestimonialForm()
@@ -729,6 +790,7 @@ def testimonial_create():
 
 @admin_bp.route('/testimonials/<int:testimonial_id>/edit', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("30/minute")
 def testimonial_edit(testimonial_id):
     """Edit testimonial"""
     testimonial = Testimonial.query.get_or_404(testimonial_id)
@@ -768,6 +830,7 @@ def testimonial_edit(testimonial_id):
 
 @admin_bp.route('/comments')
 @admin_required
+@limiter.limit("60/minute")
 def comments_list():
     """List all comments"""
     page = request.args.get('page', 1, type=int)
@@ -783,6 +846,7 @@ def comments_list():
 
 @admin_bp.route('/comments/<int:comment_id>/approve', methods=['POST'])
 @admin_required
+@limiter.limit("30/minute")
 def comment_approve(comment_id):
     """Approve a comment"""
     comment = Comment.query.get_or_404(comment_id)
@@ -798,6 +862,7 @@ def comment_approve(comment_id):
 
 @admin_bp.route('/comments/<int:comment_id>/delete', methods=['POST'])
 @admin_required
+@limiter.limit("30/minute")
 def comment_delete(comment_id):
     """Delete a comment"""
     comment = Comment.query.get_or_404(comment_id)
@@ -820,6 +885,7 @@ def comment_delete(comment_id):
 
 @admin_bp.route('/settings', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("30/minute")
 def site_settings():
     """Edit global site settings"""
     settings = SiteSettings.query.first()
@@ -914,6 +980,7 @@ def site_settings():
 
 @admin_bp.route('/newsletter')
 @admin_required
+@limiter.limit("60/minute")
 def newsletter_list():
     newsletters = Newsletter.query.order_by(Newsletter.created_at.desc()).all()
     return render_template('admin/newsletter/list.html', newsletters=newsletters)
@@ -921,6 +988,7 @@ def newsletter_list():
 
 @admin_bp.route('/newsletter/create', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("30/minute")
 def newsletter_create():
     form = NewsletterForm()
     if form.validate_on_submit():
@@ -946,6 +1014,7 @@ def newsletter_create():
 
 @admin_bp.route('/newsletter/<int:nl_id>/edit', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("30/minute")
 def newsletter_edit(nl_id):
     newsletter = Newsletter.query.get_or_404(nl_id)
     form = NewsletterForm()
@@ -979,6 +1048,7 @@ def newsletter_edit(nl_id):
 
 @admin_bp.route('/newsletter/<int:nl_id>/delete', methods=['POST'])
 @admin_required
+@limiter.limit("30/minute")
 def newsletter_delete(nl_id):
     nl = Newsletter.query.get_or_404(nl_id)
     db.session.delete(nl)
@@ -991,6 +1061,7 @@ def newsletter_delete(nl_id):
 
 @admin_bp.route('/newsletter/send', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("5/minute")
 def newsletter_send():
     """General Send Newsletter Page"""
     form = NewsletterCampaignForm()
@@ -1035,6 +1106,7 @@ def newsletter_send():
 
 @admin_bp.route('/newsletter/<int:nl_id>/send', methods=['POST'])
 @admin_required
+@limiter.limit("5/minute")
 def newsletter_quick_send(nl_id):
     """Quick Send from Newsletter List (AJAX)"""
     newsletter = Newsletter.query.get_or_404(nl_id)
@@ -1073,12 +1145,14 @@ def newsletter_quick_send(nl_id):
 
 @admin_bp.route('/newsletter/sent')
 @admin_required
+@limiter.limit("60/minute")
 def newsletter_sent():
     campaigns = NewsletterCampaign.query.order_by(NewsletterCampaign.sent_at.desc()).all()
     return render_template('admin/newsletter/sent.html', campaigns=campaigns)
 
 @admin_bp.route('/subscribers')
 @admin_required
+@limiter.limit("60/minute")
 def subscribers_list():
     """List all subscribers"""
     page = request.args.get('page', 1, type=int)
@@ -1088,6 +1162,7 @@ def subscribers_list():
 
 @admin_bp.route('/subscribers/<int:subscriber_id>/delete', methods=['POST'])
 @admin_required
+@limiter.limit("30/minute")
 def subscriber_delete(subscriber_id):
     """Delete subscriber"""
     subscriber = Subscriber.query.get_or_404(subscriber_id)
@@ -1124,6 +1199,7 @@ def url_has_allowed_host_and_scheme(target):
 
 @admin_bp.route('/hero-slides')
 @admin_required
+@limiter.limit("60/minute")
 def hero_slides_list():
     slides = HeroSlide.query.order_by(HeroSlide.order).all()
     return render_template('admin/hero_slides/list.html', slides=slides)
@@ -1131,6 +1207,7 @@ def hero_slides_list():
 
 @admin_bp.route('/hero-slides/create', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("30/minute")
 def hero_slide_create():
     form = HeroSlideForm()
     
@@ -1164,6 +1241,7 @@ def hero_slide_create():
 
 @admin_bp.route('/hero-slides/<int:slide_id>/edit', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("30/minute")
 def hero_slide_edit(slide_id):
     slide = HeroSlide.query.get_or_404(slide_id)
     form = HeroSlideForm()
@@ -1203,6 +1281,7 @@ def hero_slide_edit(slide_id):
 
 @admin_bp.route('/hero-slides/<int:slide_id>/delete', methods=['POST'])
 @admin_required
+@limiter.limit("30/minute")
 def hero_slide_delete(slide_id):
     slide = HeroSlide.query.get_or_404(slide_id)
     
@@ -1215,9 +1294,8 @@ def hero_slide_delete(slide_id):
             
             if os.path.exists(full_path):
                 os.remove(full_path)
-                print(f"Deleted image file: {full_path}")
-        except Exception as e:
-            print(f"Warning: Could not delete image file: {e}")
+        except Exception:
+            pass
             # Continue anyway - we still want to delete the DB record
     
     # Delete from database
@@ -1232,6 +1310,7 @@ def hero_slide_delete(slide_id):
 
 @admin_bp.route('/register', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("10/hour")
 def register_admin():
     form = AdminRegisterForm()
     
@@ -1263,6 +1342,7 @@ def register_admin():
 
 @admin_bp.route('/admins')
 @admin_required
+@limiter.limit("60/minute")
 def admins_list():
     """List all admins except current user"""
     admins = User.query.filter(
@@ -1274,17 +1354,12 @@ def admins_list():
 
 @admin_bp.route('/admins/create', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("10/hour")
 def admin_create():
     form = AdminRegisterForm()
 
-    print("Request method:", request.method)
-
     if form.validate_on_submit():
-        print("Form validated")
-
         try:
-            print("Creating user...")
-
             user = User(
                 username=form.username.data.strip(),
                 first_name=form.first_name.data.strip() if form.first_name.data else '',
@@ -1299,11 +1374,7 @@ def admin_create():
             db.session.add(user)
             db.session.commit()
 
-            print("User saved")
-
             send_activation_email(user, token)
-
-            print("Email sent")
 
             flash(
                 f'New admin account created and invitation sent to {user.email}',
@@ -1314,11 +1385,7 @@ def admin_create():
 
         except Exception as e:
             db.session.rollback()
-            print("ERROR:", str(e))
             flash(str(e), 'danger')
-
-    else:
-        print("Form errors:", form.errors)
 
     return render_template(
         'admin/admins/form.html',
@@ -1329,6 +1396,7 @@ def admin_create():
 
 @admin_bp.route('/admins/<int:user_id>/edit', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("10/hour")
 def admin_edit(user_id):
     user = User.query.get_or_404(user_id)
     if user.id == current_user.id:
@@ -1358,6 +1426,7 @@ def admin_edit(user_id):
 
 @admin_bp.route('/admins/<int:user_id>/delete', methods=['POST'])
 @admin_required
+@limiter.limit("10/hour")
 def admin_delete(user_id):
     user = User.query.get(user_id)
 
@@ -1385,6 +1454,7 @@ def admin_delete(user_id):
 # ====================    ====================
 @admin_bp.route('/testimonials/links')
 @admin_required
+@limiter.limit("60/minute")
 def testimonial_links():
     submissions = TestimonialSubmission.query.order_by(TestimonialSubmission.created_at.desc()).all()
     return render_template('admin/testimonials/links.html', submissions=submissions)
@@ -1392,6 +1462,7 @@ def testimonial_links():
 
 @admin_bp.route('/testimonials/generate-link', methods=['GET', 'POST'])
 @admin_required
+@limiter.limit("10/hour")
 def generate_testimonial_link():
     form = TestimonialLinkForm()
     if form.validate_on_submit():
@@ -1419,6 +1490,7 @@ def generate_testimonial_link():
 
 @admin_bp.route('/testimonials/links/<int:sub_id>/resend', methods=['POST'])
 @admin_required
+@limiter.limit("10/hour")
 def resend_testimonial_link(sub_id):
     submission = TestimonialSubmission.query.get_or_404(sub_id)
     
@@ -1441,6 +1513,7 @@ def resend_testimonial_link(sub_id):
 
 @admin_bp.route('/testimonials/<int:testimonial_id>/approve', methods=['POST'])
 @admin_required
+@limiter.limit("30/minute")
 def testimonial_approve(testimonial_id):
     testimonial = Testimonial.query.get_or_404(testimonial_id)
     testimonial.is_active = True
@@ -1454,6 +1527,7 @@ def testimonial_approve(testimonial_id):
 
 @admin_bp.route('/testimonials/<int:testimonial_id>/delete', methods=['POST'])
 @admin_required
+@limiter.limit("30/minute")
 def testimonial_delete(testimonial_id):
     testimonial = Testimonial.query.get_or_404(testimonial_id)
     db.session.delete(testimonial)
@@ -1467,6 +1541,7 @@ def testimonial_delete(testimonial_id):
 
 @admin_bp.route('/testimonials/links/<int:sub_id>/delete', methods=['POST'])
 @admin_required
+@limiter.limit("30/minute")
 def testimonial_link_delete(sub_id):
     """Delete a testimonial submission link"""
     submission = TestimonialSubmission.query.get_or_404(sub_id)

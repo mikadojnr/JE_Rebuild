@@ -60,6 +60,7 @@ class SubscribeNewsletterForm(FlaskForm):
     """Newsletter Subscription Form"""
     email = StringField('Your email', validators=[DataRequired(), Email()])
     name = StringField('Your name (optional)', validators=[Optional(), Length(max=255)])
+    website = StringField('Website', validators=[Optional()], render_kw={'style': 'display:none !important', 'tabindex': '-1', 'autocomplete': 'off'})
     submit = SubmitField('Subscribe')
 
 

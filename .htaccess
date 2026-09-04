@@ -1,0 +1,42 @@
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+PassengerAppRoot "/home/johnwprz/johneniolaltd.com"
+PassengerBaseURI "/"
+PassengerPython "/home/johnwprz/virtualenv/johneniolaltd.com/3.13/bin/python"
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+
+# ============================================
+# SECURITY RULES
+# ============================================
+
+# Disable directory listing
+Options -Indexes
+
+# Block sensitive files from being accessed via web
+<FilesMatch "\.(env|py|pyc|pyo|db|sqlite3|ini|log|sh|sql)$">
+    Require all denied
+</FilesMatch>
+
+# Block access to hidden files (.git, .env, etc.)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Force HTTPS (uncomment after SSL is confirmed working)
+# RewriteEngine On
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Prevent clickjacking
+Header always set X-Frame-Options "SAMEORIGIN"
+
+# Prevent MIME type sniffing
+Header always set X-Content-Type-Options "nosniff"
+
+# XSS Protection
+Header always set X-XSS-Protection "1; mode=block"
+
+# Referrer Policy
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+# Permissions Policy
+Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"

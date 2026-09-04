@@ -6,5 +6,12 @@
 node_modules
 .next/
 .DS_Store
+__pycache__/
+*.pyc
 
 uploads/*
+
+# Security audit artifacts (internal, not for version control)
+security-audit-report.html
+SECURITY_AUDIT_PROMPT_je-rebuild.md
+SECURITY_AUDIT_PROMPT_Generic.md

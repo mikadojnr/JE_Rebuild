@@ -14,9 +14,11 @@ from models import (
 )
 from forms import ContactForm, ForgotPasswordForm, NewsletterForm, CommentForm, PublicTestimonialForm, ResetPasswordForm, SetPasswordForm, SubscribeNewsletterForm
 from app import db, mail
+from extensions import limiter, csrf
 from bleach import clean
 from datetime import datetime
 from dotenv import load_dotenv
+from flask_login import login_required
 
 from utils import send_password_reset_email
 
@@ -43,7 +45,6 @@ def get_youtube_videos():
                 if datetime.now().timestamp() - cache.get('timestamp', 0) < CACHE_DURATION:
                     videos = cache.get('videos', [])
                     cache_loaded = True
-                    print("Loaded from cache")
         except:
             pass
 
@@ -52,18 +53,13 @@ def get_youtube_videos():
 
     # Fetch from YouTube
     try:
-        print("Fetching from YouTube API...")
-
         url = f"https://www.googleapis.com/youtube/v3/search?part=snippet&channelId={CHANNEL_ID}&maxResults=10&order=date&type=video&key={API_KEY}"
         
         response = requests.get(url, timeout=15)
-        
-        print(f"API Status: {response.status_code}")
 
         if response.status_code == 200:
             data = response.json()
             items = data.get('items', [])
-            print(f"Videos found: {len(items)}")
 
             for item in items:
                 snippet = item['snippet']
@@ -89,15 +85,14 @@ def get_youtube_videos():
                         'timestamp': datetime.now().timestamp(),
                         'videos': videos
                     }, f)
-                print("Cache saved")
             except:
                 pass
 
         else:
-            print("API Error Response:", response.text[:300])
+            pass
 
-    except Exception as e:
-        print(f"Exception: {e}")
+    except Exception:
+        pass
 
     return videos
 
@@ -113,7 +108,11 @@ def inject_site_settings():
 
 
 @public_bp.route('/test-email')
+@login_required
 def test_email():
+    from flask_login import current_user
+    if not current_user.is_admin:
+        return "Forbidden", 403
     try:
         msg = Message(
             subject="Test Email",
@@ -235,6 +234,7 @@ def sitemap_xml():
 
 
 @public_bp.route('/')
+@limiter.limit("60/minute")
 def home():
     
     """Home Page"""
@@ -243,7 +243,6 @@ def home():
     latest_posts = BlogPost.query.filter_by(is_published=True).order_by(desc(BlogPost.published_at)).limit(9).all()
     hero_slides = HeroSlide.query.filter_by(is_active=True).order_by(HeroSlide.order).all()
     videos = get_youtube_videos()
-    print(f"Passing {len(videos)} videos to template")
     return render_template('public/home.html', 
                          services=services,
                          testimonials=testimonials,
@@ -253,6 +252,7 @@ def home():
 
 
 @public_bp.route('/about')
+@limiter.limit("60/minute")
 def about():
     """About Page"""
     team_members = TeamMember.query.filter_by(is_active=True).order_by(TeamMember.order).all()
@@ -260,6 +260,7 @@ def about():
 
 
 @public_bp.route('/services')
+@limiter.limit("60/minute")
 def services():
     """Services Page"""
     services = Service.query.filter_by(is_active=True).order_by(Service.order).all()
@@ -267,6 +268,7 @@ def services():
 
 
 @public_bp.route('/insights')
+@limiter.limit("60/minute")
 def insights():
     """Insights/Blog Page"""
     page = request.args.get('page', 1, type=int)
@@ -278,6 +280,7 @@ def insights():
 
 
 @public_bp.route('/search')
+@limiter.limit("30/minute")
 def search():
     """Search across blog posts, services, and newsletters"""
     q = request.args.get('q', '').strip()
@@ -329,6 +332,7 @@ def search():
 
 
 @public_bp.route('/insights/<string:slug>', methods=['GET', 'POST'])
+@limiter.limit("30/minute")
 def blog_detail(slug):
     post = BlogPost.query.filter_by(slug=slug, is_published=True).first_or_404()
     
@@ -400,6 +404,7 @@ def blog_detail(slug):
                          related_posts=related_posts)
 
 @public_bp.route('/newsletters')
+@limiter.limit("30/minute")
 def newsletters():
     """Dedicated Newsletter List Page"""
     page = request.args.get('page', 1, type=int)
@@ -411,6 +416,7 @@ def newsletters():
 
 
 @public_bp.route('/newsletter/<string:slug>')
+@limiter.limit("30/minute")
 def newsletter_detail(slug):
     """Single Newsletter Detail with PDF Viewer"""
     newsletter = Newsletter.query.filter_by(slug=slug, is_published=True).first_or_404()
@@ -418,6 +424,7 @@ def newsletter_detail(slug):
     return render_template('public/newsletter_detail.html', newsletter=newsletter)
 
 @public_bp.route('/comment/manage/<token>')
+@limiter.limit("30/minute")
 def manage_comment(token):
 
     comment = Comment.query.filter_by(
@@ -433,6 +440,7 @@ def manage_comment(token):
     '/comment/manage/<token>/edit',
     methods=['POST']
 )
+@limiter.limit("10/minute")
 def edit_comment(token):
 
     comment = Comment.query.filter_by(
@@ -452,6 +460,7 @@ def edit_comment(token):
     '/comment/manage/<token>/delete',
     methods=['POST']
 )
+@limiter.limit("10/minute")
 def delete_comment(token):
 
     comment = Comment.query.filter_by(
@@ -470,6 +479,7 @@ def delete_comment(token):
 
 
 @public_bp.route('/contact', methods=['GET', 'POST'])
+@limiter.limit("10/hour")
 def contact():
     """Contact Page"""
     form = ContactForm()
@@ -510,15 +520,34 @@ def contact():
 
 
 @public_bp.route('/newsletter/subscribe', methods=['POST'])
+@limiter.limit("10/hour")
 def newsletter_subscribe():
     """Newsletter Subscription (AJAX)"""
     form = SubscribeNewsletterForm()
-    
+
+    # Honeypot: bots fill this hidden field, humans don't see it.
+    # Silently accept the request but don't save anything.
+    if form.website.data:
+        return jsonify({
+            'success': True,
+            'message': 'Thank you for subscribing!'
+        }), 201
+
     if form.validate_on_submit():
+        email = form.email.data.strip().lower()
+
+        # Reject obvious bot-pattern emails (dots between every char, etc.)
+        from utils import is_suspicious_email
+        if is_suspicious_email(email):
+            return jsonify({
+                'success': True,
+                'message': 'Thank you for subscribing!'
+            }), 201
+
         try:
             # Check if already subscribed
-            existing = Subscriber.query.filter_by(email=form.email.data).first()
-            
+            existing = Subscriber.query.filter_by(email=email).first()
+
             if existing:
                 if not existing.is_active:
                     existing.is_active = True
@@ -527,15 +556,15 @@ def newsletter_subscribe():
                     'success': False,
                     'message': 'You are already subscribed!'
                 }), 200
-            
+
             # Add new subscriber
             subscriber = Subscriber(
-                email=form.email.data,
+                email=email,
                 name=form.name.data or None
             )
             db.session.add(subscriber)
             db.session.commit()
-            
+
             return jsonify({
                 'success': True,
                 'message': 'Thank you for subscribing!'
@@ -546,7 +575,7 @@ def newsletter_subscribe():
                 'success': False,
                 'message': 'Error processing subscription.'
             }), 400
-    
+
     return jsonify({
         'success': False,
         'message': 'Validation failed.',
@@ -555,6 +584,7 @@ def newsletter_subscribe():
 
 
 @public_bp.route('/unsubscribe')
+@limiter.limit("10/hour")
 def unsubscribe():
     """Public Unsubscribe Page"""
     email = request.args.get('email', '').strip().lower()
@@ -578,6 +608,7 @@ def unsubscribe():
 
 
 @public_bp.route('/api/comments/<int:post_id>')
+@limiter.limit("30/minute")
 def get_comments(post_id):
     """Get approved comments for a post (API endpoint)"""
     comments = Comment.query.filter_by(
@@ -600,6 +631,7 @@ def get_comments(post_id):
 
 # ============================ ========================== 
 @public_bp.route('/activate/<token>', methods=['GET', 'POST'])
+@limiter.limit("10/hour")
 def activate_account(token):
     user = User.query.filter_by(activation_token=token).first_or_404()
     
@@ -622,6 +654,7 @@ def activate_account(token):
 
 
 @public_bp.route('/forgot-password', methods=['GET', 'POST'])
+@limiter.limit("5/hour")
 def forgot_password():
     form = ForgotPasswordForm()
     
@@ -639,6 +672,7 @@ def forgot_password():
 
 
 @public_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+@limiter.limit("10/hour")
 def reset_password(token):
     user = User.query.filter_by(reset_token=token).first_or_404()
     
@@ -656,6 +690,7 @@ def reset_password(token):
 
 
 @public_bp.route('/submit-testimonial/<token>', methods=['GET', 'POST'])
+@limiter.limit("5/hour")
 def submit_testimonial(token):
     submission = TestimonialSubmission.query.filter_by(token=token).first_or_404()
 
